@@ -7,12 +7,25 @@ class RoutineDraft {
     required this.days,
   });
 
+  static const int minimumExercisesPerDay = 3;
+  static const int minimumDurationWeeks = 4;
+
   final String name;
   final int durationWeeks;
   final List<RoutineDayDraft> days;
 
   int get totalExercises =>
       days.fold(0, (total, day) => total + day.exercises.length);
+
+  bool get hasMinimumDuration => durationWeeks >= minimumDurationWeeks;
+
+  bool get isWeeklyRoutineComplete =>
+      days.isNotEmpty &&
+      days.every((day) => day.exercises.length >= minimumExercisesPerDay);
+
+  List<RoutineDayDraft> get daysBelowMinimumExercises => days
+      .where((day) => day.exercises.length < minimumExercisesPerDay)
+      .toList(growable: false);
 }
 
 class RoutineDayDraft {

@@ -40,11 +40,34 @@ class _CoachCreateRoutinePageState extends State<CoachCreateRoutinePage> {
 
   void _saveAndAssign() {
     final draft = _controller.draft;
-    final hasExercises = draft.days.any((day) => day.exercises.isNotEmpty);
-    if (draft.name.trim().isEmpty || !hasExercises) {
+    if (draft.name.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Agrega un nombre y al menos un ejercicio antes de guardar.'),
+          content: Text('Agrega un nombre antes de guardar la rutina.'),
+        ),
+      );
+      return;
+    }
+
+    if (!draft.hasMinimumDuration) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'La rutina semanal debe asignarse por al menos ${RoutineDraft.minimumDurationWeeks} semanas.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final incompleteDays = draft.daysBelowMinimumExercises;
+    if (incompleteDays.isNotEmpty) {
+      final labels = incompleteDays.map((day) => day.label).join(', ');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No se puede guardar. Cada dia de la semana debe tener minimo ${RoutineDraft.minimumExercisesPerDay} ejercicios. Revisa: $labels.',
+          ),
         ),
       );
       return;
@@ -152,6 +175,16 @@ class _CoachCreateRoutinePageState extends State<CoachCreateRoutinePage> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.small),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Se guarda como rutina semanal. Debe durar al menos ${RoutineDraft.minimumDurationWeeks} semanas y cada dia necesita minimo ${RoutineDraft.minimumExercisesPerDay} ejercicios.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6C748D),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -192,6 +225,13 @@ class _CoachCreateRoutinePageState extends State<CoachCreateRoutinePage> {
                           selectedDay.title,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xSmall),
+                        Text(
+                          'Minimo ${RoutineDraft.minimumExercisesPerDay} ejercicios para poder guardar la semana.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6C748D),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.medium),
