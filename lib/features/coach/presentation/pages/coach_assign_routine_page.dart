@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../domain/coach_dashboard_data.dart';
+import '../../domain/routine_catalog_mock_data.dart';
 import '../../domain/routine_builder_models.dart';
 
 class CoachAssignRoutinePage extends StatefulWidget {
@@ -15,6 +16,7 @@ class CoachAssignRoutinePage extends StatefulWidget {
 
 class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
   final Set<String> _selectedClientIds = <String>{};
+  String? _selectedRoutineKey;
   bool _notifyClients = true;
   bool _isPublished = false;
 
@@ -22,7 +24,8 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
   Widget build(BuildContext context) {
     final args = _normalizeArgs(ModalRoute.of(context)?.settings.arguments);
     final allClients = CoachMockData.clients;
-    final routine = args.routine;
+    final routines = _buildRoutineCatalog(args.routine);
+    final selectedRoutine = _resolveSelectedRoutine(routines);
     final theme = Theme.of(context);
 
     if (_selectedClientIds.isEmpty && args.preselectedClients.isNotEmpty) {
@@ -73,7 +76,7 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                routine.name,
+                                selectedRoutine?.name ?? 'Selecciona una rutina ya creada',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: const Color(0xFF7B8194),
                                 ),
@@ -99,8 +102,32 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                     _InputBlock(
                       label: 'Duracion (semanas)',
                       child: TextFormField(
-                        initialValue: '${routine.durationWeeks}',
+                        initialValue:
+                            '${selectedRoutine?.durationWeeks ?? RoutineDraft.minimumDurationWeeks}',
                         decoration: const InputDecoration(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.medium),
+                    Text(
+                      'Rutinas disponibles',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF6C748D),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.small),
+                    ...routines.map(
+                      (routine) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                        child: _RoutineSelectionCard(
+                          routine: routine,
+                          isSelected: _routineKey(routine) == _selectedRoutineKey,
+                          onSelect: () {
+                            setState(() {
+                              _selectedRoutineKey = _routineKey(routine);
+                            });
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.medium),
@@ -234,13 +261,19 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                                   ),
                                 ),
                                 const SizedBox(height: AppSpacing.small),
-                                _SummaryLine(label: 'Rutina', value: routine.name),
+                                _SummaryLine(
+                                  label: 'Rutina',
+                                  value: selectedRoutine?.name ?? 'Sin seleccionar',
+                                ),
                                 _SummaryLine(label: 'Inicio', value: '22 de marzo de 2026'),
                                 _SummaryLine(
                                   label: 'Duracion',
-                                  value: '${routine.durationWeeks} semanas',
+                                  value: '${selectedRoutine?.durationWeeks ?? 0} semanas',
                                 ),
-                                _SummaryLine(label: 'Ejercicios', value: '${routine.totalExercises}'),
+                                _SummaryLine(
+                                  label: 'Ejercicios',
+                                  value: '${selectedRoutine?.totalExercises ?? 0}',
+                                ),
                                 _SummaryLine(
                                   label: 'Asesorados',
                                   value: '${_selectedClientIds.length}',
@@ -271,7 +304,7 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                                           route.settings.name == '/dashboard',
                                     );
                                   }
-                                : _selectedClientIds.isEmpty
+                                : _selectedClientIds.isEmpty || selectedRoutine == null
                                     ? null
                                     : () {
                                         setState(() {
@@ -315,22 +348,35 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
 
     if (rawArgs is CoachClient) {
       return AssignRoutineArgs(
-        routine: RoutineDraft(
-          name: rawArgs.currentRoutine,
-          durationWeeks: 8,
-          days: const [],
-        ),
         preselectedClients: [rawArgs],
       );
     }
 
-    return AssignRoutineArgs(
-      routine: const RoutineDraft(
-        name: 'Nueva Rutina Full Body',
-        durationWeeks: 8,
-        days: [],
-      ),
-    );
+    return const AssignRoutineArgs();
+  }
+
+  List<RoutineDraft> _buildRoutineCatalog(RoutineDraft? incomingRoutine) {
+    final routines = List<RoutineDraft>.from(RoutineCatalogMockData.savedRoutines);
+    if (incomingRoutine != null) {
+      routines.insert(0, incomingRoutine);
+    }
+    if (_selectedRoutineKey == null && routines.isNotEmpty) {
+      _selectedRoutineKey = _routineKey(incomingRoutine ?? routines.first);
+    }
+    return routines;
+  }
+
+  RoutineDraft? _resolveSelectedRoutine(List<RoutineDraft> routines) {
+    for (final routine in routines) {
+      if (_routineKey(routine) == _selectedRoutineKey) {
+        return routine;
+      }
+    }
+    return routines.isEmpty ? null : routines.first;
+  }
+
+  String _routineKey(RoutineDraft routine) {
+    return routine.id.isNotEmpty ? routine.id : routine.name;
   }
 }
 
@@ -401,9 +447,143 @@ class _SummaryLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
-        '• $label: $value',
+        '- $label: $value',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: const Color(0xFF55607F),
+            ),
+      ),
+    );
+  }
+}
+
+class _RoutineSelectionCard extends StatelessWidget {
+  const _RoutineSelectionCard({
+    required this.routine,
+    required this.isSelected,
+    required this.onSelect,
+  });
+
+  final RoutineDraft routine;
+  final bool isSelected;
+  final VoidCallback onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tags = routine.focusTags;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFFF4F1FF) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF5B5CF6) : const Color(0xFFE5E7F0),
+        ),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          leading: Icon(
+            isSelected
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            color: isSelected ? const Color(0xFF5B5CF6) : const Color(0xFFC0C4D2),
+          ),
+          title: Text(
+            routine.name,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: tags
+                  .map((tag) => _RoutineFocusTag(label: tag))
+                  .toList(growable: false),
+            ),
+          ),
+          trailing: TextButton(
+            onPressed: onSelect,
+            child: Text(isSelected ? 'Seleccionada' : 'Usar'),
+          ),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${routine.durationWeeks} semanas - ${routine.totalExercises} ejercicios',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF6C748D),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.small),
+            ...routine.days.map(
+              (day) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F8FC),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        day.title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ...day.exercises.map(
+                        (exercise) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '- ${exercise.name} - ${exercise.series} x ${exercise.repetitions}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF61677C),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoutineFocusTag extends StatelessWidget {
+  const _RoutineFocusTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF0FF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF4C77FF),
+              fontWeight: FontWeight.w700,
             ),
       ),
     );

@@ -2,6 +2,7 @@ import 'coach_dashboard_data.dart';
 
 class RoutineDraft {
   const RoutineDraft({
+    this.id = '',
     required this.name,
     required this.durationWeeks,
     required this.days,
@@ -10,6 +11,7 @@ class RoutineDraft {
   static const int minimumExercisesPerDay = 3;
   static const int minimumDurationWeeks = 4;
 
+  final String id;
   final String name;
   final int durationWeeks;
   final List<RoutineDayDraft> days;
@@ -26,6 +28,21 @@ class RoutineDraft {
   List<RoutineDayDraft> get daysBelowMinimumExercises => days
       .where((day) => day.exercises.length < minimumExercisesPerDay)
       .toList(growable: false);
+
+  List<String> get focusTags {
+    final tags = <String>{};
+    for (final day in days) {
+      if (day.focus.trim().isNotEmpty) {
+        tags.add(day.focus.trim());
+      }
+      for (final exercise in day.exercises) {
+        if (exercise.focus.trim().isNotEmpty) {
+          tags.add(exercise.focus.trim());
+        }
+      }
+    }
+    return tags.toList(growable: false);
+  }
 }
 
 class RoutineDayDraft {
@@ -83,10 +100,10 @@ class RoutineExerciseDraft {
 
 class AssignRoutineArgs {
   const AssignRoutineArgs({
-    required this.routine,
+    this.routine,
     this.preselectedClients = const [],
   });
 
-  final RoutineDraft routine;
+  final RoutineDraft? routine;
   final List<CoachClient> preselectedClients;
 }
