@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:gymsas_auth/gymsas_auth.dart';
+import 'package:gymsas_design_system/gymsas_design_system.dart';
 
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/widgets/gym_text_field.dart';
-import '../../../dashboard/presentation/pages/dashboard_page.dart';
-import '../../application/login_form_controller.dart';
-import '../../domain/user_role.dart';
-import '../widgets/role_selector.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../controllers/login_form_controller.dart';
+import '../localization/auth_localizations.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({
+    super.key,
+    required this.controller,
+    required this.onAuthenticated,
+  });
 
-  static const routeName = '/';
+  final LoginFormController controller;
+  final ValueChanged<AuthSession> onAuthenticated;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -18,252 +22,125 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _userController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _loginController = LoginFormController();
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _userController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) {
-      return;
-    }
-
-    Navigator.of(context).pushNamed(
-      DashboardPage.routeName,
-      arguments: _loginController.selectedRole,
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final session = await widget.controller.submit(
+      user: _userController.text,
+      password: _passwordController.text,
     );
+    if (session != null && mounted) widget.onAuthenticated(session);
+  }
+
+  String? _validateUser(String? value, AppLocalizations l10n) {
+    final user = value?.trim() ?? '';
+    if (user.isEmpty) return l10n.validationUserRequired;
+    if (user.length < 3) return l10n.validationUserMinLength(3);
+    return null;
+  }
+
+  String? _validatePassword(String? value, AppLocalizations l10n) {
+    final password = value ?? '';
+    if (password.isEmpty) return l10n.validationPasswordRequired;
+    if (password.length < 6) return l10n.validationPasswordMinLength(6);
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - (AppSpacing.large * 2),
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: AppSpacing.xLarge),
-                          _BrandHeader(colorScheme: colorScheme, theme: theme),
-                          const SizedBox(height: 44),
-                          RoleSelector(
-                            selectedRole: _loginController.selectedRole,
-                            onRoleSelected: (role) {
-                              setState(() {
-                                _loginController.changeRole(role);
-                              });
-                            },
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Form(
+                key: _formKey,
+                child: AnimatedBuilder(
+                  animation: widget.controller,
+                  builder: (context, _) {
+                    final errorCode = widget.controller.errorCode;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        CircleAvatar(
+                          radius: 48,
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          child: const Icon(
+                            Icons.fitness_center_rounded,
+                            size: 46,
                           ),
-                          const SizedBox(height: 40),
-                          GymTextField(
-                            controller: _emailController,
-                            label: 'Correo',
-                            hint: 'tu@correo.com',
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            validator: _loginController.validateEmail,
-                          ),
-                          const SizedBox(height: AppSpacing.large),
-                          GymTextField(
-                            controller: _passwordController,
-                            label: 'Contrasena',
-                            hint: '..........',
-                            obscureText: true,
-                            textInputAction: TextInputAction.done,
-                            validator: _loginController.validatePassword,
-                          ),
-                          const SizedBox(height: 34),
-                          ElevatedButton(
-                            onPressed: _submit,
-                            child: const Text('Entrar'),
-                          ),
-                          const SizedBox(height: 28),
-                          Text(
-                            _helperMessage(_loginController.selectedRole),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 28),
-                          const _SocialDivider(),
-                          const SizedBox(height: 24),
-                          const Row(
-                            children: [
-                              Expanded(
-                                child: _SocialButton(
-                                  label: 'Google',
-                                  icon: 'G',
-                                  iconColor: Color(0xFFDB4437),
-                                ),
-                              ),
-                              SizedBox(width: AppSpacing.large),
-                              Expanded(
-                                child: _SocialButton(
-                                  label: 'Facebook',
-                                  icon: 'f',
-                                  iconColor: Color(0xFF1877F2),
-                                ),
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: AppSpacing.large),
+                        Text(
+                          l10n.appTitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineLarge,
+                        ),
+                        const SizedBox(height: AppSpacing.small),
+                        Text(
+                          l10n.loginSubtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 40),
+                        CredentialsFields(
+                          userController: _userController,
+                          passwordController: _passwordController,
+                          userLabel: l10n.usernameLabel,
+                          userHint: l10n.usernameHint,
+                          passwordLabel: l10n.passwordLabel,
+                          passwordHint: l10n.passwordHint,
+                          userValidator: (value) => _validateUser(value, l10n),
+                          passwordValidator: (value) =>
+                              _validatePassword(value, l10n),
+                          onPasswordSubmitted: _submit,
+                        ),
+                        if (errorCode != null) ...[
+                          const SizedBox(height: AppSpacing.medium),
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              l10n.errorMessage(errorCode),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: colorScheme.error),
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
+                        const SizedBox(height: AppSpacing.xLarge),
+                        GymPrimaryButton(
+                          label: l10n.loginButton,
+                          isLoading: widget.controller.isLoading,
+                          onPressed: _submit,
+                        ),
+                        const SizedBox(height: AppSpacing.large),
+                        Text(
+                          l10n.roleAutoDetected,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  String _helperMessage(UserRole role) {
-    switch (role) {
-      case UserRole.coach:
-        return 'Tu equipo te proporciono este acceso';
-      case UserRole.trainee:
-        return 'Tu entrenador te proporciono este acceso';
-    }
-  }
-}
-
-class _BrandHeader extends StatelessWidget {
-  const _BrandHeader({
-    required this.colorScheme,
-    required this.theme,
-  });
-
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Center(
-          child: Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.fitness_center_rounded,
-              size: 46,
-              color: colorScheme.onPrimary,
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.large),
-        Text(
-          'FitCoach',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineLarge?.copyWith(
-            fontSize: 30,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.small),
-        Text(
-          'Gestion de entrenamiento',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15),
-        ),
-      ],
-    );
-  }
-}
-
-class _SocialDivider extends StatelessWidget {
-  const _SocialDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Row(
-      children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
-          child: Text(
-            'O continua con',
-            style: textTheme.bodyMedium?.copyWith(fontSize: 14),
-          ),
-        ),
-        const Expanded(child: Divider()),
-      ],
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  final String label;
-  final String icon;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        foregroundColor: theme.colorScheme.onSurface,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            icon,
-            style: TextStyle(
-              color: iconColor,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }
