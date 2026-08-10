@@ -1,10 +1,24 @@
 library;
 
 export 'src/atoms/gym_primary_button.dart';
+export 'src/atoms/gym_label_value.dart';
+export 'src/atoms/gym_compact_metric.dart';
+export 'src/atoms/gym_surface.dart';
+export 'src/atoms/gym_tag.dart';
 export 'src/atoms/gym_text_field.dart';
 export 'src/atoms/metric_card.dart';
 export 'src/molecules/credentials_fields.dart';
 export 'src/molecules/dashboard_action_tile.dart';
+export 'src/molecules/gym_branded_header.dart';
+export 'src/molecules/gym_choice_filter.dart';
+export 'src/molecules/gym_dropdown_field.dart';
+export 'src/molecules/gym_labeled_field.dart';
+export 'src/molecules/gym_workout_exercise_tile.dart';
+export 'src/molecules/gym_section_card.dart';
+export 'src/organisms/gym_client_list_card.dart';
+export 'src/organisms/gym_workout_summary_card.dart';
+export 'src/organisms/gym_workout_day_card.dart';
+export 'src/templates/gym_scrollable_page.dart';
 export 'src/templates/role_dashboard_template.dart';
 export 'src/theme/app_colors.dart';
 export 'src/theme/app_spacing.dart';

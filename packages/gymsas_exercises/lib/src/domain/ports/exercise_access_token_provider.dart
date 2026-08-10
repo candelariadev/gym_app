@@ -1,0 +1,1 @@
+typedef ExerciseAccessTokenProvider = String? Function();

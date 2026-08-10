@@ -39,8 +39,14 @@ dependencies:
   intl: any
   gymsas_auth:
     path: packages/gymsas_auth
+  gymsas_clients:
+    path: packages/gymsas_clients
   gymsas_design_system:
     path: packages/gymsas_design_system
+  gymsas_dashboard:
+    path: packages/gymsas_dashboard
+  gymsas_exercises:
+    path: packages/gymsas_exercises
 
 dev_dependencies:
   flutter_test:

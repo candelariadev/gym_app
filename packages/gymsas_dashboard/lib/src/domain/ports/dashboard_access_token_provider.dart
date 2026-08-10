@@ -1,0 +1,1 @@
+typedef DashboardAccessTokenProvider = String? Function();

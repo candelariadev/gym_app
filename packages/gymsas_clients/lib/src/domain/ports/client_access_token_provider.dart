@@ -1,0 +1,1 @@
+typedef ClientAccessTokenProvider = String? Function();

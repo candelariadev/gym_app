@@ -4,8 +4,16 @@ import 'package:gymsas_auth/gymsas_auth.dart';
 
 import '../../features/auth/presentation/controllers/login_form_controller.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/coach/presentation/pages/coach_assign_routine_page.dart';
+import '../../features/coach/presentation/pages/coach_client_profile_page.dart';
+import '../../features/coach/presentation/pages/coach_clients_page.dart';
+import '../../features/coach/presentation/pages/coach_create_routine_page.dart';
+import '../../features/coach/presentation/pages/coach_exercise_library_page.dart';
+import '../../features/coach/presentation/pages/coach_routine_detail_page.dart';
 import '../../features/dashboard/presentation/pages/advised_dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/trainer_dashboard_page.dart';
+import '../../features/workout/presentation/pages/workout_session_page.dart';
+import '../../features/workout/presentation/pages/workout_today_page.dart';
 import '../app_dependencies.dart';
 
 enum GymRoutePath {
@@ -54,8 +62,10 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
   final AppDependencies _dependencies;
   final LoginFormController _loginController;
 
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
-  final navigatorKey = GlobalKey<NavigatorState>();
+  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 
   @override
   GymRoutePath get currentConfiguration {
@@ -92,7 +102,12 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         name: '/trainer',
         child: TrainerDashboardPage(
           session: session!,
+          getTrainerDashboard: _dependencies.getTrainerDashboardUseCase,
           onLogout: controller.logout,
+          onOpenClients: () => _pushNamed(CoachClientsPage.routeName),
+          onCreateRoutine: () => _pushNamed(CoachCreateRoutinePage.routeName),
+          onOpenExerciseCatalog: () =>
+              _pushNamed(CoachExerciseLibraryPage.routeName),
         ),
       ),
       GymRoutePath.advised => MaterialPage<void>(
@@ -101,11 +116,17 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         child: AdvisedDashboardPage(
           session: session!,
           onLogout: controller.logout,
+          onOpenTodayWorkout: () => _pushNamed(WorkoutTodayPage.routeName),
         ),
       ),
     };
 
-    return Navigator(key: navigatorKey, pages: [page], onDidRemovePage: (_) {});
+    return Navigator(
+      key: navigatorKey,
+      pages: [page],
+      onGenerateRoute: _onGenerateFeatureRoute,
+      onDidRemovePage: (_) {},
+    );
   }
 
   @override
@@ -115,9 +136,55 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
   }
 
   @override
-  Future<bool> popRoute() => SynchronousFuture(false);
+  Future<bool> popRoute() =>
+      _navigatorKey.currentState?.maybePop() ?? SynchronousFuture(false);
 
-  void _onSessionChanged() => notifyListeners();
+  Route<dynamic>? _onGenerateFeatureRoute(RouteSettings settings) {
+    final role = _dependencies.sessionController.session?.role;
+    final builder = switch ((role, settings.name)) {
+      (UserRole.trainer, CoachClientProfilePage.routeName) =>
+        (_) => const CoachClientProfilePage(),
+      (UserRole.trainer, CoachClientsPage.routeName) => (_) => CoachClientsPage(
+        getTrainerClients: _dependencies.getTrainerClientsUseCase,
+      ),
+      (UserRole.trainer, CoachCreateRoutinePage.routeName) =>
+        (_) => CoachCreateRoutinePage(
+          getExercisesUseCase: _dependencies.getExercisesUseCase,
+        ),
+      (UserRole.trainer, CoachAssignRoutinePage.routeName) =>
+        (_) => CoachAssignRoutinePage(
+          getTrainerClients: _dependencies.getTrainerClientsUseCase,
+        ),
+      (UserRole.trainer, CoachExerciseLibraryPage.routeName) =>
+        (_) => CoachExerciseLibraryPage(
+          getExercisesUseCase: _dependencies.getExercisesUseCase,
+          selectionMode: settings.arguments == true,
+        ),
+      (UserRole.trainer, CoachRoutineDetailPage.routeName) =>
+        (_) => const CoachRoutineDetailPage(),
+      (UserRole.advised, WorkoutTodayPage.routeName) => (_) => WorkoutTodayPage(
+        store: _dependencies.workoutSessionStore,
+      ),
+      (UserRole.advised, WorkoutSessionPage.routeName) =>
+        (_) => WorkoutSessionPage(store: _dependencies.workoutSessionStore),
+      _ => null,
+    };
+
+    if (builder == null) return null;
+    return MaterialPageRoute<dynamic>(builder: builder, settings: settings);
+  }
+
+  void _pushNamed(String routeName, {Object? arguments}) {
+    _navigatorKey.currentState?.pushNamed(routeName, arguments: arguments);
+  }
+
+  void _onSessionChanged() {
+    if (_dependencies.sessionController.session == null) {
+      _dependencies.workoutSessionStore.reset();
+    }
+    _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    notifyListeners();
+  }
 
   @override
   void dispose() {

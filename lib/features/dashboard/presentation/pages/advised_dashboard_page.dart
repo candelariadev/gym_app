@@ -10,10 +10,12 @@ class AdvisedDashboardPage extends StatelessWidget {
     super.key,
     required this.session,
     required this.onLogout,
+    required this.onOpenTodayWorkout,
   });
 
   final AuthSession session;
   final VoidCallback onLogout;
+  final VoidCallback onOpenTodayWorkout;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +53,7 @@ class AdvisedDashboardPage extends StatelessWidget {
           title: l10n.todayWorkoutAction,
           subtitle: l10n.todayWorkoutActionDescription,
           icon: Icons.play_circle_outline_rounded,
+          onTap: onOpenTodayWorkout,
         ),
         DashboardActionTile(
           title: l10n.myProgressAction,

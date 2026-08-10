@@ -1,0 +1,15 @@
+name: gymsas_clients
+description: Consulta reutilizable de clientes y rutinas asignadas para aplicaciones GymSAS.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  gymsas_api_client:
+    path: ../gymsas_api_client
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.3

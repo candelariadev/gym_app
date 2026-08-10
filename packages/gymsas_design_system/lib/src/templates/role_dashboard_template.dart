@@ -90,7 +90,10 @@ class RoleDashboardTemplate extends StatelessWidget {
                   const SizedBox(height: AppSpacing.large),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final columns = constraints.maxWidth >= 700 ? 3 : 2;
+                      final maxColumns = constraints.maxWidth >= 700 ? 3 : 2;
+                      final columns = metrics.length < maxColumns
+                          ? metrics.length
+                          : maxColumns;
                       return GridView.count(
                         crossAxisCount: columns,
                         crossAxisSpacing: AppSpacing.medium,
