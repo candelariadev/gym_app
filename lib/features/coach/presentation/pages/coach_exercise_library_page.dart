@@ -290,6 +290,12 @@ class _CoachExerciseLibraryPageState extends State<CoachExerciseLibraryPage> {
     final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
     final instructions = exercise.instructions.resolve(language);
+    final imageUrl = _resolveExerciseImageUrl(exercise.images);
+    final metadata = _buildExerciseMetadata(
+      l10n: l10n,
+      language: language,
+      exercise: exercise,
+    );
     return showModalBottomSheet<ExerciseCatalogItem>(
       context: context,
       isScrollControlled: true,
@@ -299,11 +305,21 @@ class _CoachExerciseLibraryPageState extends State<CoachExerciseLibraryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _ExerciseImageGallery(imageUrl: imageUrl),
               Text(
                 exercise.name.resolve(language),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: AppSpacing.medium),
+              if (metadata.isNotEmpty) ...[
+                Text(
+                  l10n.exerciseDetailsTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.small),
+                _AttributeChips(items: metadata),
+                const SizedBox(height: AppSpacing.medium),
+              ],
               Text(
                 l10n.exerciseInstructionsTitle,
                 style: Theme.of(context).textTheme.titleMedium,
@@ -352,11 +368,17 @@ class _ExerciseCatalogCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final language = Localizations.localeOf(context).languageCode;
+    final imageUrl = _resolveExerciseImageUrl(exercise.images);
     final tags = <String>[
       if (exercise.level != null) exercise.level!,
       if (exercise.equipment != null) exercise.equipment!,
       ...exercise.primaryMuscles.take(2),
     ];
+    final metadata = _buildExerciseMetadata(
+      l10n: l10n,
+      language: language,
+      exercise: exercise,
+    );
     final name = exercise.name.resolve(language);
     final initial = name.isEmpty ? '?' : name.characters.first;
     return GymSurface(
@@ -369,7 +391,10 @@ class _ExerciseCatalogCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(child: Text(initial)),
+                _ExerciseImageAvatar(
+                  imageUrl: imageUrl,
+                  fallback: initial,
+                ),
                 const SizedBox(width: AppSpacing.small),
                 Expanded(
                   child: Text(
@@ -384,9 +409,13 @@ class _ExerciseCatalogCard extends StatelessWidget {
                     tooltip: l10n.commonAdd,
                     onPressed: onAdd,
                     icon: const Icon(Icons.add_circle_outline_rounded),
-                  ),
+                ),
               ],
             ),
+            if (metadata.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.small),
+              _AttributeChips(items: metadata),
+            ],
             if (tags.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.small),
               Wrap(
@@ -402,6 +431,170 @@ class _ExerciseCatalogCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ExerciseImageAvatar extends StatelessWidget {
+  const _ExerciseImageAvatar({
+    this.imageUrl,
+    required this.fallback,
+  });
+
+  final String? imageUrl;
+  final String fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null) {
+      return CircleAvatar(child: Text(fallback));
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Image.network(
+        imageUrl!,
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => CircleAvatar(child: Text(fallback)),
+        loadingBuilder: (_, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Attribute {
+  const _Attribute({required this.label, required this.value});
+
+  final String label;
+  final String value;
+}
+
+class _AttributeChips extends StatelessWidget {
+  const _AttributeChips({required this.items});
+
+  final List<_Attribute> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items
+          .map((item) => GymTag(label: '${item.label}: ${item.value}'))
+          .toList(growable: false),
+    );
+  }
+}
+
+class _ExerciseImageGallery extends StatelessWidget {
+  const _ExerciseImageGallery({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl == null) {
+      return const SizedBox.shrink();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Image.network(
+          imageUrl!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          errorBuilder: (_, _, _) => Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            alignment: Alignment.center,
+            child: const Icon(Icons.broken_image_rounded),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+List<_Attribute> _buildExerciseMetadata({
+  required AppLocalizations l10n,
+  required String language,
+  required ExerciseCatalogItem exercise,
+}) {
+  final metadata = <_Attribute>[];
+
+  void addIfNotEmpty(String label, String? rawValue) {
+    final value = rawValue?.trim();
+    if (value != null && value.isNotEmpty) {
+      metadata.add(_Attribute(label: label, value: value));
+    }
+  }
+
+  addIfNotEmpty(
+    l10n.exerciseLevelLabel,
+    exercise.level,
+  );
+  addIfNotEmpty(
+    l10n.exerciseCategoryLabel,
+    exercise.category,
+  );
+
+  if (language == 'es') {
+    addIfNotEmpty('Fuerza', exercise.force);
+    addIfNotEmpty('Mecánica', exercise.mechanic);
+    addIfNotEmpty('Equipo', exercise.equipment);
+  } else {
+    addIfNotEmpty('Force', exercise.force);
+    addIfNotEmpty('Mechanic', exercise.mechanic);
+    addIfNotEmpty('Equipment', exercise.equipment);
+  }
+
+  if (exercise.primaryMuscles.isNotEmpty) {
+    metadata.add(
+      _Attribute(
+        label: l10n.exerciseMuscleLabel,
+        value: exercise.primaryMuscles.join(', '),
+      ),
+    );
+  }
+  if (exercise.secondaryMuscles.isNotEmpty) {
+    metadata.add(
+      _Attribute(
+        label: language == 'es' ? 'Músculos secundarios' : 'Secondary muscles',
+        value: exercise.secondaryMuscles.join(', '),
+      ),
+    );
+  }
+
+  return metadata;
+}
+
+String? _resolveExerciseImageUrl(List<String> images) {
+  if (images.isEmpty) return null;
+
+  final first = images.first.trim();
+  if (first.isEmpty) return null;
+
+  if (first.startsWith('http://') || first.startsWith('https://')) {
+    return first;
+  }
+
+  return null;
 }
 
 class _PaginationFooter extends StatelessWidget {

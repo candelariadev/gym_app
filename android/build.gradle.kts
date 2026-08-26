@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Required to resolve the native dependency declared by gymsas_payments.
+        maven { url = uri("https://artifacts.mercadolibre.com/repository/android-releases") }
     }
 }
 

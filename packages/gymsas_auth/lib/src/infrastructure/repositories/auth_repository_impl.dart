@@ -36,6 +36,9 @@ class AuthRepositoryImpl implements AuthRepository {
         ownerId: claims.ownerId,
         user: claims.user,
         role: claims.role,
+        nickname: claims.nickname,
+        firebaseUid: claims.firebaseUid,
+        plan: claims.plan,
       );
     } on AuthException {
       rethrow;

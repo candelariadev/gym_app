@@ -248,6 +248,48 @@ abstract class AppLocalizations {
   /// **'Asesorado'**
   String get advisedRole;
 
+  /// No description provided for @onboardingBirthdateLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de nacimiento'**
+  String get onboardingBirthdateLabel;
+
+  /// No description provided for @onboardingBirthdateRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona tu fecha de nacimiento'**
+  String get onboardingBirthdateRequired;
+
+  /// No description provided for @onboardingGenderLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Sexo'**
+  String get onboardingGenderLabel;
+
+  /// No description provided for @onboardingGenderRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona tu sexo'**
+  String get onboardingGenderRequired;
+
+  /// No description provided for @onboardingGenderMale.
+  ///
+  /// In es, this message translates to:
+  /// **'Masculino'**
+  String get onboardingGenderMale;
+
+  /// No description provided for @onboardingGenderFemale.
+  ///
+  /// In es, this message translates to:
+  /// **'Femenino'**
+  String get onboardingGenderFemale;
+
+  /// No description provided for @onboardingGenderOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otro'**
+  String get onboardingGenderOther;
+
   /// No description provided for @greeting.
   ///
   /// In es, this message translates to:
@@ -362,6 +404,30 @@ abstract class AppLocalizations {
   /// **'Consulta ejercicios, series y repeticiones'**
   String get todayWorkoutActionDescription;
 
+  /// No description provided for @homeTabLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio'**
+  String get homeTabLabel;
+
+  /// No description provided for @calendarTabLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Calendario'**
+  String get calendarTabLabel;
+
+  /// No description provided for @plansTabLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Planes'**
+  String get plansTabLabel;
+
+  /// No description provided for @completedWorkoutsStat.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0 {0 rutinas completadas} =1 {1 rutina completada} other {{count} rutinas completadas}}'**
+  String completedWorkoutsStat(num count);
+
   /// No description provided for @myProgressAction.
   ///
   /// In es, this message translates to:
@@ -385,6 +451,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Consulta la información de tu entrenador'**
   String get myTrainerActionDescription;
+
+  /// No description provided for @trainerSummaryNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No se encontró la información del entrenador.'**
+  String get trainerSummaryNotFound;
+
+  /// No description provided for @myTrainersEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes entrenadores asignados.'**
+  String get myTrainersEmpty;
+
+  /// No description provided for @trainerSummaryAboutTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Acerca del entrenador'**
+  String get trainerSummaryAboutTitle;
+
+  /// No description provided for @trainerSummaryDetailsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Información profesional'**
+  String get trainerSummaryDetailsTitle;
+
+  /// No description provided for @trainerSummaryPlanLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Plan'**
+  String get trainerSummaryPlanLabel;
+
+  /// No description provided for @trainerSummaryStatusLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado'**
+  String get trainerSummaryStatusLabel;
+
+  /// No description provided for @trainerSummaryExperienceLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Experiencia'**
+  String get trainerSummaryExperienceLabel;
+
+  /// No description provided for @trainerSummaryExperienceYears.
+  ///
+  /// In es, this message translates to:
+  /// **'{years, plural, =1 {1 año} other {{years} años}}'**
+  String trainerSummaryExperienceYears(int years);
+
+  /// No description provided for @trainerSummaryCertificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Certificaciones'**
+  String get trainerSummaryCertificationsTitle;
 
   /// No description provided for @commonBack.
   ///
@@ -839,8 +959,20 @@ abstract class AppLocalizations {
   /// No description provided for @restBlockedMessage.
   ///
   /// In es, this message translates to:
-  /// **'No puedes marcar otra serie hasta que termine el descanso.'**
+  /// **'Puedes continuar cuando quieras o saltar el descanso.'**
   String get restBlockedMessage;
+
+  /// No description provided for @skipRestLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar descanso'**
+  String get skipRestLabel;
+
+  /// No description provided for @sessionDurationLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Tiempo de sesión'**
+  String get sessionDurationLabel;
 
   /// No description provided for @workoutCompleted.
   ///
@@ -1292,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Este asesorado todavía no tiene rutinas asignadas.'**
   String get assignedRoutinesEmpty;
 
+  /// No description provided for @myAssignedRoutinesEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes rutinas asignadas.'**
+  String get myAssignedRoutinesEmpty;
+
   /// No description provided for @birthdateLabel.
   ///
   /// In es, this message translates to:
@@ -1380,6 +1518,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ver detalle'**
   String get viewRoutineDetails;
+
+  /// No description provided for @pauseLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Pausar'**
+  String get pauseLabel;
 
   /// No description provided for @routineDetailTitle.
   ///

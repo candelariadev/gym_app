@@ -1,5 +1,9 @@
 class AppConfig {
-  const AppConfig({required this.graphQlUrl, required this.ownerId});
+  const AppConfig({
+    required this.graphQlUrl,
+    required this.ownerId,
+    this.mercadoPagoPublicKey = '',
+  });
 
   factory AppConfig.fromEnvironment() {
     return const AppConfig(
@@ -8,9 +12,11 @@ class AppConfig {
         defaultValue: 'http://10.0.2.2:8090/graphql',
       ),
       ownerId: String.fromEnvironment('GYM_OWNER_ID', defaultValue: 'tenant_1'),
+      mercadoPagoPublicKey: String.fromEnvironment('MERCADO_PAGO_PUBLIC_KEY'),
     );
   }
 
   final String graphQlUrl;
   final String ownerId;
+  final String mercadoPagoPublicKey;
 }

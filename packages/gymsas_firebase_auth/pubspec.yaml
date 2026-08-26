@@ -1,0 +1,21 @@
+name: gymsas_firebase_auth
+description: Adaptador Firebase/Google para el puerto de identidad de GymSAS.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  google_sign_in: ^7.2.0
+  gymsas_auth:
+    path: ../gymsas_auth
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

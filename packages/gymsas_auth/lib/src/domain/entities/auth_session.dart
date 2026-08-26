@@ -9,6 +9,9 @@ class AuthSession {
     required this.ownerId,
     required this.user,
     required this.role,
+    this.nickname,
+    this.firebaseUid,
+    this.plan,
   });
 
   final String accessToken;
@@ -18,6 +21,14 @@ class AuthSession {
   final String ownerId;
   final String user;
   final UserRole role;
+  final String? nickname;
+  final String? firebaseUid;
+  final String? plan;
+
+  bool get canManageSubscription => firebaseUid?.trim().isNotEmpty == true;
+
+  String get displayName =>
+      nickname?.trim().isNotEmpty == true ? nickname! : user;
 
   bool get isExpired => DateTime.now().isAfter(accessTokenExpiresAt);
 }

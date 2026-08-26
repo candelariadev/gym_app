@@ -6,12 +6,15 @@ import 'package:gym_app/app/navigation/gym_router.dart';
 import 'package:gym_app/core/config/app_config.dart';
 import 'package:gym_app/features/auth/presentation/controllers/session_controller.dart';
 import 'package:gym_app/features/auth/presentation/pages/login_page.dart';
+import 'package:gym_app/features/workout/application/my_workouts_controller.dart';
+import 'package:gym_app/features/workout/application/workout_exercise_metadata_resolver.dart';
 import 'package:gym_app/features/workout/application/workout_session_store.dart';
 import 'package:gym_app/features/workout/infrastructure/workout_demo_data.dart';
 import 'package:gymsas_auth/gymsas_auth.dart';
 import 'package:gymsas_clients/gymsas_clients.dart';
 import 'package:gymsas_exercises/gymsas_exercises.dart';
 import 'package:gymsas_dashboard/gymsas_dashboard.dart';
+import 'package:gymsas_workouts/gymsas_workouts.dart';
 
 void main() {
   testWidgets('valida usuario y contrasena vacios', (tester) async {
@@ -93,9 +96,35 @@ void main() {
     expect(find.text('ASESORADO'), findsOneWidget);
     expect(find.text('Entrenamiento de hoy'), findsOneWidget);
     expect(find.text('Mis asesorados'), findsNothing);
+    expect(find.text('Planes'), findsNothing);
   });
 
-  testWidgets('abre el entrenamiento con estado inyectado', (tester) async {
+  testWidgets('OAuth existente redirige segun el rol devuelto por el BFF', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      GymApp(
+        dependencies: _dependencies(
+          UserRole.trainer,
+          federatedRole: UserRole.advised,
+        ),
+        locale: const Locale('es'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Continuar con Google'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuar con Google'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ASESORADO'), findsOneWidget);
+    expect(find.text('Entrenamiento de hoy'), findsOneWidget);
+    expect(find.text('ENTRENADOR'), findsNothing);
+    expect(find.text('Planes'), findsOneWidget);
+  });
+
+  testWidgets('abre el listado modular de rutinas asignadas', (tester) async {
     await tester.pumpWidget(
       GymApp(
         dependencies: _dependencies(UserRole.advised),
@@ -108,11 +137,13 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), '123456');
     await tester.tap(find.text('Iniciar sesión'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Entrenamiento de hoy'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Entrenamiento de hoy'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Rutina Full Body'), findsOneWidget);
-    expect(find.text('Duración estimada'), findsOneWidget);
+    expect(find.text('Rutinas asignadas'), findsOneWidget);
+    expect(find.text('Aún no tienes rutinas asignadas.'), findsOneWidget);
   });
 
   testWidgets('presenta la interfaz en ingles', (tester) async {
@@ -165,8 +196,16 @@ void main() {
   });
 }
 
-AppDependencies _dependencies(UserRole role, {void Function()? onDispose}) {
+AppDependencies _dependencies(
+  UserRole role, {
+  UserRole? federatedRole,
+  void Function()? onDispose,
+}) {
   final sessions = _MemorySessionRepository();
+  final identityProvider = _FakeExternalIdentityProvider();
+  final federatedRepository = federatedRole == null
+      ? null
+      : _FakeFederatedAuthRepository(federatedRole);
   return AppDependencies(
     config: const AppConfig(
       graphQlUrl: 'http://localhost/graphql',
@@ -186,12 +225,96 @@ AppDependencies _dependencies(UserRole role, {void Function()? onDispose}) {
     getTrainerClientsUseCase: GetTrainerClientsUseCase(
       _FakeTrainerClientRepository(),
     ),
+    getMyTrainersUseCase: GetMyTrainersUseCase(_FakeAdvisedTrainerRepository()),
     getTrainerDashboardUseCase: GetTrainerDashboardUseCase(
       _FakeTrainerDashboardRepository(),
     ),
     getExercisesUseCase: GetExercisesUseCase(_FakeExerciseCatalogRepository()),
+    assignWorkoutUseCase: AssignWorkoutUseCase(_FakeWorkoutRepository()),
+    myWorkoutsController: MyWorkoutsController(
+      getMyWorkouts: GetMyWorkoutsUseCase(_FakeWorkoutRepository()),
+      getMyWorkoutSessions: GetMyWorkoutSessionsUseCase(
+        _FakeWorkoutRepository(),
+      ),
+      startWorkoutSession: StartWorkoutSessionUseCase(_FakeWorkoutRepository()),
+      pauseWorkoutSession: PauseWorkoutSessionUseCase(_FakeWorkoutRepository()),
+      finishWorkoutSession: FinishWorkoutSessionUseCase(
+        _FakeWorkoutRepository(),
+      ),
+      exerciseMetadataResolver: WorkoutExerciseMetadataResolver(
+        getExercisesUseCase: GetExercisesUseCase(
+          _FakeExerciseCatalogRepository(),
+        ),
+      ),
+    ),
+    signInWithGoogleUseCase: federatedRepository == null
+        ? null
+        : SignInWithGoogleUseCase(
+            identityProvider,
+            federatedRepository,
+            sessions,
+          ),
+    completeIndividualOnboardingUseCase: federatedRepository == null
+        ? null
+        : CompleteIndividualOnboardingUseCase(
+            identityProvider,
+            federatedRepository,
+            sessions,
+          ),
     onDispose: onDispose,
   );
+}
+
+class _FakeExternalIdentityProvider implements ExternalIdentityProvider {
+  @override
+  Future<String> signInWithGoogle() async => 'firebase-id-token';
+
+  @override
+  Future<String> refreshIdToken() async => 'refreshed-firebase-id-token';
+
+  @override
+  Future<void> signOut() async {}
+}
+
+class _FakeFederatedAuthRepository implements FederatedAuthRepository {
+  const _FakeFederatedAuthRepository(this.role);
+
+  final UserRole role;
+
+  @override
+  Future<FederatedAuthFlow> signIn(String idToken) async => _flow();
+
+  @override
+  Future<FederatedAuthFlow> completeOnboarding(
+    IndividualOnboarding onboarding,
+  ) async => _flow();
+
+  FederatedAuthFlow _flow() {
+    final session = AuthSession(
+      accessToken: 'access',
+      accessTokenExpiresAt: DateTime.now().add(const Duration(hours: 1)),
+      refreshToken: 'refresh',
+      refreshTokenExpiresAt: DateTime.now().add(const Duration(days: 1)),
+      ownerId: 'individual-account',
+      user: 'oauth-user',
+      role: role,
+      nickname: 'Kevin',
+      firebaseUid: 'firebase-uid',
+      plan: 'INDIVIDUAL',
+    );
+    return FederatedAuthFlow(
+      state: FederatedAuthState.authenticated,
+      identity: FederatedIdentity(
+        uid: 'firebase-uid',
+        email: 'user@example.com',
+        name: 'Kevin',
+        nickname: 'Kevin',
+        role: role.backendValue,
+        onboardingCompleted: true,
+      ),
+      session: session,
+    );
+  }
 }
 
 class _FakeTrainerDashboardRepository implements TrainerDashboardRepository {
@@ -214,6 +337,11 @@ class _FakeTrainerClientRepository implements TrainerClientRepository {
   Future<List<TrainerClient>> getClients() async => const [];
 }
 
+class _FakeAdvisedTrainerRepository implements AdvisedTrainerRepository {
+  @override
+  Future<List<AdvisedTrainer>> getTrainers() async => const [];
+}
+
 class _FakeExerciseCatalogRepository implements ExerciseCatalogRepository {
   @override
   Future<ExerciseCatalogPage> getPage(ExerciseCatalogRequest request) async {
@@ -224,6 +352,40 @@ class _FakeExerciseCatalogRepository implements ExerciseCatalogRepository {
       total: 0,
       totalPages: 0,
     );
+  }
+}
+
+class _FakeWorkoutRepository implements WorkoutRepository {
+  @override
+  Future<Workout> assign(AssignWorkoutCommand command) async => Workout(
+    routineId: 'routine-1',
+    userId: command.userId,
+    name: command.name,
+    status: 'ACTIVE',
+  );
+
+  @override
+  Future<List<Workout>> getMyWorkouts({bool? activeOnly}) async => const [];
+
+  @override
+  Future<List<WorkoutSession>> getMyWorkoutSessions({bool? activeOnly}) async =>
+      const [];
+
+  @override
+  Future<WorkoutSession> startWorkoutSession(
+    StartWorkoutSessionCommand command,
+  ) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<WorkoutSession> pauseWorkoutSession(String sessionId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<WorkoutSession> finishWorkoutSession(String sessionId) {
+    throw UnimplementedError();
   }
 }
 

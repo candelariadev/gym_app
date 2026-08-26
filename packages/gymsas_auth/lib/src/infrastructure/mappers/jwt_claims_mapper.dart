@@ -8,11 +8,17 @@ class AuthTokenClaims {
     required this.ownerId,
     required this.user,
     required this.role,
+    this.nickname,
+    this.firebaseUid,
+    this.plan,
   });
 
   final String ownerId;
   final String user;
   final UserRole role;
+  final String? nickname;
+  final String? firebaseUid;
+  final String? plan;
 }
 
 class JwtClaimsMapper {
@@ -30,6 +36,9 @@ class JwtClaimsMapper {
         ownerId: json['sub'] as String,
         user: json['user'] as String,
         role: UserRole.fromBackend(json['role'] as String),
+        nickname: json['nickname'] as String?,
+        firebaseUid: json['firebaseUid'] as String?,
+        plan: json['plan'] as String?,
       );
     } on FormatException {
       throw const AuthException(AuthErrorCode.invalidSession);

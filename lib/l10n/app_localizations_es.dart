@@ -93,6 +93,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get advisedRole => 'Asesorado';
 
   @override
+  String get onboardingBirthdateLabel => 'Fecha de nacimiento';
+
+  @override
+  String get onboardingBirthdateRequired => 'Selecciona tu fecha de nacimiento';
+
+  @override
+  String get onboardingGenderLabel => 'Sexo';
+
+  @override
+  String get onboardingGenderRequired => 'Selecciona tu sexo';
+
+  @override
+  String get onboardingGenderMale => 'Masculino';
+
+  @override
+  String get onboardingGenderFemale => 'Femenino';
+
+  @override
+  String get onboardingGenderOther => 'Otro';
+
+  @override
   String greeting(String user) {
     return 'Hola, $user';
   }
@@ -158,6 +179,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Consulta ejercicios, series y repeticiones';
 
   @override
+  String get homeTabLabel => 'Inicio';
+
+  @override
+  String get calendarTabLabel => 'Calendario';
+
+  @override
+  String get plansTabLabel => 'Planes';
+
+  @override
+  String completedWorkoutsStat(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rutinas completadas',
+      one: '1 rutina completada',
+      zero: '0 rutinas completadas',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get myProgressAction => 'Mi progreso';
 
   @override
@@ -169,6 +211,42 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get myTrainerActionDescription =>
       'Consulta la información de tu entrenador';
+
+  @override
+  String get trainerSummaryNotFound =>
+      'No se encontró la información del entrenador.';
+
+  @override
+  String get myTrainersEmpty => 'No tienes entrenadores asignados.';
+
+  @override
+  String get trainerSummaryAboutTitle => 'Acerca del entrenador';
+
+  @override
+  String get trainerSummaryDetailsTitle => 'Información profesional';
+
+  @override
+  String get trainerSummaryPlanLabel => 'Plan';
+
+  @override
+  String get trainerSummaryStatusLabel => 'Estado';
+
+  @override
+  String get trainerSummaryExperienceLabel => 'Experiencia';
+
+  @override
+  String trainerSummaryExperienceYears(int years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: '$years años',
+      one: '1 año',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trainerSummaryCertificationsTitle => 'Certificaciones';
 
   @override
   String get commonBack => 'Volver';
@@ -435,7 +513,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get restBlockedMessage =>
-      'No puedes marcar otra serie hasta que termine el descanso.';
+      'Puedes continuar cuando quieras o saltar el descanso.';
+
+  @override
+  String get skipRestLabel => 'Saltar descanso';
+
+  @override
+  String get sessionDurationLabel => 'Tiempo de sesión';
 
   @override
   String get workoutCompleted => 'Has completado la rutina de hoy';
@@ -689,6 +773,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este asesorado todavía no tiene rutinas asignadas.';
 
   @override
+  String get myAssignedRoutinesEmpty => 'Aún no tienes rutinas asignadas.';
+
+  @override
   String get birthdateLabel => 'Fecha de nacimiento';
 
   @override
@@ -797,6 +884,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get viewRoutineDetails => 'Ver detalle';
+
+  @override
+  String get pauseLabel => 'Pausar';
 
   @override
   String get routineDetailTitle => 'Detalle de rutina';

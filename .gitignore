@@ -48,3 +48,55 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# Local environment and compile-time configuration
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Firebase Admin and OAuth secrets
+**/firebase-service-account*.json
+**/*firebase-adminsdk*.json
+**/service-account*.json
+**/client_secret_*.json
+**/application_default_credentials.json
+**/.secrets/
+**/secrets/
+
+# Project-specific Firebase client configuration. These files mainly contain
+# public application identifiers, but are kept local to avoid exposing project
+# metadata and API keys in a public repository.
+/lib/firebase_options.dart
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/macos/Runner/GoogleService-Info.plist
+**/firebase_app_id_file.json
+
+# Android local configuration and signing material
+/android/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+
+# Apple signing material
+**/AuthKey_*.p8
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/*.provisionprofile
+
+# Private keys
+**/*.pem
+**/*.key
+**/id_rsa
+**/id_rsa.*
+**/id_ed25519
+**/id_ed25519.*
+
+# Firebase CLI local state and diagnostics
+.firebase/
+firebase-debug.log
+firebase-debug.*.log

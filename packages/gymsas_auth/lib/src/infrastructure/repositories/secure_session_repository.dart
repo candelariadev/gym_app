@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/ports/session_repository.dart';
 import '../../domain/user_role.dart';
+import '../mappers/jwt_claims_mapper.dart';
 
 class SecureSessionRepository implements SessionRepository {
   const SecureSessionRepository(this._storage);
@@ -21,6 +22,9 @@ class SecureSessionRepository implements SessionRepository {
     if (encoded == null) return null;
     try {
       final json = jsonDecode(encoded) as Map<String, dynamic>;
+      final claims = const JwtClaimsMapper().fromToken(
+        json['accessToken'] as String,
+      );
       final session = AuthSession(
         accessToken: json['accessToken'] as String,
         accessTokenExpiresAt: DateTime.parse(
@@ -33,6 +37,9 @@ class SecureSessionRepository implements SessionRepository {
         ownerId: json['ownerId'] as String,
         user: json['user'] as String,
         role: UserRole.fromBackend(json['role'] as String),
+        nickname: json['nickname'] as String?,
+        firebaseUid: json['firebaseUid'] as String? ?? claims.firebaseUid,
+        plan: json['plan'] as String? ?? claims.plan,
       );
       if (session.isExpired) {
         await clear();
@@ -58,6 +65,9 @@ class SecureSessionRepository implements SessionRepository {
         'ownerId': session.ownerId,
         'user': session.user,
         'role': session.role.backendValue,
+        'nickname': session.nickname,
+        'firebaseUid': session.firebaseUid,
+        'plan': session.plan,
       }),
     );
   }

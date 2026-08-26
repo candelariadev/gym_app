@@ -5,7 +5,7 @@ import 'package:gymsas_design_system/gymsas_design_system.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/routine_builder_models.dart';
 import '../localization/client_catalog_localizations.dart';
-import 'coach_assign_routine_page.dart';
+import 'coach_create_routine_page.dart';
 import 'coach_routine_detail_page.dart';
 
 class CoachClientProfilePage extends StatelessWidget {
@@ -27,10 +27,14 @@ class CoachClientProfilePage extends StatelessWidget {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.of(context).pushNamed(
-              CoachAssignRoutinePage.routeName,
+              CoachCreateRoutinePage.routeName,
               arguments: AssignRoutineArgs(
                 preselectedClients: [
-                  AssignableClient(id: client.id, name: client.name),
+                  AssignableClient(
+                    id: client.id,
+                    userId: client.user,
+                    name: client.name,
+                  ),
                 ],
               ),
             ),

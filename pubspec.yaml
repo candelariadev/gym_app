@@ -39,6 +39,10 @@ dependencies:
   intl: any
   gymsas_auth:
     path: packages/gymsas_auth
+  gymsas_api_client:
+    path: packages/gymsas_api_client
+  gymsas_firebase_auth:
+    path: packages/gymsas_firebase_auth
   gymsas_clients:
     path: packages/gymsas_clients
   gymsas_design_system:
@@ -47,6 +51,10 @@ dependencies:
     path: packages/gymsas_dashboard
   gymsas_exercises:
     path: packages/gymsas_exercises
+  gymsas_payments:
+    path: packages/gymsas_payments
+  gymsas_workouts:
+    path: packages/gymsas_workouts
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +72,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  config:
+    enable-swift-package-manager: true
   generate: true
 
   # The following line ensures that the Material Icons font is

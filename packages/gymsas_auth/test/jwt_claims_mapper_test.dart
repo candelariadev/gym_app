@@ -23,4 +23,25 @@ void main() {
     expect(claims.user, 'coach_demo');
     expect(claims.role, UserRole.trainer);
   });
+
+  test('identifica una sesión emitida por Firebase y su plan actual', () {
+    final payload = base64Url.encode(
+      utf8.encode(
+        jsonEncode({
+          'sub': 'individual-account',
+          'user': 'firebase-user',
+          'role': 'ADVISED',
+          'firebaseUid': 'firebase-uid-1',
+          'plan': 'INDIVIDUAL',
+        }),
+      ),
+    );
+
+    final claims = const JwtClaimsMapper().fromToken(
+      'header.$payload.signature',
+    );
+
+    expect(claims.firebaseUid, 'firebase-uid-1');
+    expect(claims.plan, 'INDIVIDUAL');
+  });
 }

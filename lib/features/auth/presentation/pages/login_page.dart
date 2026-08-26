@@ -4,6 +4,7 @@ import 'package:gymsas_design_system/gymsas_design_system.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/login_form_controller.dart';
+import '../controllers/federated_auth_controller.dart';
 import '../localization/auth_localizations.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,10 +12,12 @@ class LoginPage extends StatefulWidget {
     super.key,
     required this.controller,
     required this.onAuthenticated,
+    this.federatedController,
   });
 
   final LoginFormController controller;
   final ValueChanged<AuthSession> onAuthenticated;
+  final FederatedAuthController? federatedController;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -38,6 +41,11 @@ class _LoginPageState extends State<LoginPage> {
       user: _userController.text,
       password: _passwordController.text,
     );
+    if (session != null && mounted) widget.onAuthenticated(session);
+  }
+
+  Future<void> _googleSignIn() async {
+    final session = await widget.federatedController?.signInWithGoogle();
     if (session != null && mounted) widget.onAuthenticated(session);
   }
 
@@ -127,6 +135,16 @@ class _LoginPageState extends State<LoginPage> {
                           isLoading: widget.controller.isLoading,
                           onPressed: _submit,
                         ),
+                        if (widget.federatedController != null) ...[
+                          const SizedBox(height: AppSpacing.medium),
+                          OutlinedButton.icon(
+                            onPressed: widget.federatedController!.isLoading
+                                ? null
+                                : _googleSignIn,
+                            icon: const Icon(Icons.login),
+                            label: const Text('Continuar con Google'),
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.large),
                         Text(
                           l10n.roleAutoDetected,

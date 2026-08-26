@@ -1,0 +1,15 @@
+name: gymsas_workouts
+description: Casos de uso y adaptadores para crear y asignar rutinas de GymSAS.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  gymsas_api_client:
+    path: ../gymsas_api_client
+
+dev_dependencies:
+  test: ^1.26.3
+  lints: ^6.0.0

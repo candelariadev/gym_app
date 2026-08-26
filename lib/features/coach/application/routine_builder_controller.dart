@@ -1,195 +1,142 @@
 import 'package:flutter/foundation.dart';
 import 'package:gymsas_exercises/gymsas_exercises.dart';
+import 'package:gymsas_workouts/gymsas_workouts.dart';
 
 import '../domain/routine_builder_models.dart';
 
 class RoutineBuilderController extends ChangeNotifier {
   RoutineBuilderController()
-    : _draft = RoutineDraft(
-        name: 'Nueva Rutina',
+    : _draft = const RoutineDraft(
+        name: '',
         durationWeeks: 8,
-        days: List.generate(
-          7,
-          (index) => RoutineDayDraft(
-            label: 'Dia ${index + 1}',
-            focus: _defaultFocuses[index],
-            exercises: index == 0
-                ? [
-                    RoutineExerciseDraft(
-                      id: 'exercise-1',
-                      name: 'Press de Banca',
-                      focus: 'Pecho',
-                      series: '4',
-                      repetitions: '8-10',
-                      weight: '60 kg',
-                      rest: '90 s',
-                    ),
-                  ]
-                : [],
-          ),
-        ),
+        days: [RoutineDayDraft(day: WorkoutDay.monday, exercises: [])],
       );
-
-  static const List<String> _defaultFocuses = [
-    'Pecho y Triceps',
-    'Espalda y Biceps',
-    'Pierna',
-    'Hombro y Core',
-    'Gluteo',
-    'Cardio',
-    'Movilidad',
-  ];
 
   RoutineDraft _draft;
   int _selectedDayIndex = 0;
-  int _exerciseSeed = 2;
 
   RoutineDraft get draft => _draft;
   int get selectedDayIndex => _selectedDayIndex;
   RoutineDayDraft get selectedDay => _draft.days[_selectedDayIndex];
+  List<WorkoutDay> get availableDays => WorkoutDay.values
+      .where((day) => !_draft.days.any((scheduled) => scheduled.day == day))
+      .toList(growable: false);
 
   void updateRoutineName(String value) {
-    _draft = RoutineDraft(
-      name: value,
-      durationWeeks: _draft.durationWeeks,
-      days: _draft.days,
-    );
-    notifyListeners();
+    _replaceDraft(name: value);
   }
 
   void updateDurationWeeks(String value) {
     final parsed = int.tryParse(value);
-    if (parsed == null || parsed <= 0) {
-      return;
-    }
-
-    _draft = RoutineDraft(
-      name: _draft.name,
-      durationWeeks: parsed,
-      days: _draft.days,
-    );
-    notifyListeners();
+    if (parsed != null) _replaceDraft(durationWeeks: parsed);
   }
 
   void selectDay(int index) {
+    if (index < 0 || index >= _draft.days.length) return;
     _selectedDayIndex = index;
     notifyListeners();
   }
 
-  void addExercise() {
-    final exercises = List<RoutineExerciseDraft>.from(selectedDay.exercises)
-      ..add(
-        RoutineExerciseDraft(
-          id: 'exercise-${_exerciseSeed++}',
-          name: 'Nuevo ejercicio',
-          focus: selectedDay.focus,
-          series: '3',
-          repetitions: '10-12',
-          weight: '',
-          rest: '60 s',
-        ),
-      );
-
-    _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
+  void addDay(WorkoutDay day) {
+    if (_draft.days.any((item) => item.day == day)) return;
+    final days = [
+      ..._draft.days,
+      RoutineDayDraft(day: day, exercises: const []),
+    ]..sort((left, right) => left.day.index.compareTo(right.day.index));
+    _replaceDraft(days: days);
+    _selectedDayIndex = days.indexWhere((item) => item.day == day);
+    notifyListeners();
   }
 
-  void addExerciseFromCatalog(ExerciseCatalogItem item, String languageCode) {
-    final exercises = List<RoutineExerciseDraft>.from(selectedDay.exercises)
-      ..add(
-        RoutineExerciseDraft(
-          id: 'exercise-${_exerciseSeed++}',
-          name: item.name.resolve(languageCode),
-          focus: item.primaryMuscles.isEmpty
-              ? selectedDay.focus
-              : item.primaryMuscles.first,
-          series: '3',
-          repetitions: '10-12',
-          weight: '',
-          rest: '60 s',
-        ),
-      );
+  void removeSelectedDay() {
+    if (_draft.days.length == 1) return;
+    final days = [..._draft.days]..removeAt(_selectedDayIndex);
+    _selectedDayIndex = _selectedDayIndex.clamp(0, days.length - 1);
+    _replaceDraft(days: days);
+  }
 
+  bool addExerciseFromCatalog(ExerciseCatalogItem item, String languageCode) {
+    if (selectedDay.exercises.any(
+      (exercise) => exercise.exerciseId == item.exerciseId,
+    )) {
+      return false;
+    }
+    final exercises = [
+      ...selectedDay.exercises,
+      RoutineExerciseDraft(
+        exerciseId: item.exerciseId,
+        name: item.name.resolve(languageCode),
+        focus: item.primaryMuscles.isEmpty ? '' : item.primaryMuscles.first,
+        sets: 3,
+        reps: 10,
+        restSeconds: 60,
+      ),
+    ];
     _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
+    return true;
   }
 
   void deleteExercise(String exerciseId) {
-    final exercises = selectedDay.exercises
-        .where((exercise) => exercise.id != exerciseId)
-        .toList();
-    _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
+    _replaceSelectedDay(
+      selectedDay.copyWith(
+        exercises: selectedDay.exercises
+            .where((exercise) => exercise.exerciseId != exerciseId)
+            .toList(growable: false),
+      ),
+    );
   }
 
-  void moveExerciseUp(int index) {
-    if (index <= 0) {
+  void moveExercise(int from, int to) {
+    final exercises = [...selectedDay.exercises];
+    if (from < 0 ||
+        from >= exercises.length ||
+        to < 0 ||
+        to >= exercises.length) {
       return;
     }
-
-    final exercises = List<RoutineExerciseDraft>.from(selectedDay.exercises);
-    final item = exercises.removeAt(index);
-    exercises.insert(index - 1, item);
+    final item = exercises.removeAt(from);
+    exercises.insert(to, item);
     _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
   }
 
-  void moveExerciseDown(int index) {
-    final exercises = List<RoutineExerciseDraft>.from(selectedDay.exercises);
-    if (index >= exercises.length - 1) {
-      return;
-    }
-
-    final item = exercises.removeAt(index);
-    exercises.insert(index + 1, item);
-    _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
-  }
-
-  void updateExerciseField(
+  void updateExercise(
     String exerciseId, {
-    String? name,
-    String? focus,
-    String? series,
-    String? repetitions,
-    String? weight,
-    String? rest,
+    int? sets,
+    int? reps,
+    int? restSeconds,
+    String? notes,
   }) {
     final exercises = selectedDay.exercises
         .map(
-          (exercise) => exercise.id == exerciseId
+          (exercise) => exercise.exerciseId == exerciseId
               ? exercise.copyWith(
-                  name: name,
-                  focus: focus,
-                  series: series,
-                  repetitions: repetitions,
-                  weight: weight,
-                  rest: rest,
+                  sets: sets,
+                  reps: reps,
+                  restSeconds: restSeconds,
+                  notes: notes,
                 )
               : exercise,
         )
-        .toList();
-
+        .toList(growable: false);
     _replaceSelectedDay(selectedDay.copyWith(exercises: exercises));
   }
 
   void _replaceSelectedDay(RoutineDayDraft updatedDay) {
-    final days = List<RoutineDayDraft>.from(_draft.days);
+    final days = [..._draft.days];
     days[_selectedDayIndex] = updatedDay;
+    _replaceDraft(days: days);
+  }
+
+  void _replaceDraft({
+    String? name,
+    int? durationWeeks,
+    List<RoutineDayDraft>? days,
+  }) {
     _draft = RoutineDraft(
-      name: _draft.name,
-      durationWeeks: _draft.durationWeeks,
-      days: days,
+      name: name ?? _draft.name,
+      durationWeeks: durationWeeks ?? _draft.durationWeeks,
+      days: days ?? _draft.days,
     );
     notifyListeners();
-  }
-}
-
-extension on RoutineDayDraft {
-  RoutineDayDraft copyWith({
-    String? label,
-    String? focus,
-    List<RoutineExerciseDraft>? exercises,
-  }) {
-    return RoutineDayDraft(
-      label: label ?? this.label,
-      focus: focus ?? this.focus,
-      exercises: exercises ?? this.exercises,
-    );
   }
 }
