@@ -1,0 +1,15 @@
+name: gymsas_notifications
+description: Notificaciones opcionales, contratos BFF e intenciones durables por cuenta.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: ^3.10.4
+dependencies:
+  gymsas_api_client:
+    path: ../gymsas_api_client
+  gymsas_offline:
+    path: ../gymsas_offline
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

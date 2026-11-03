@@ -1,0 +1,15 @@
+[extend]
+useDefault = true
+
+# Catch short/low-entropy credentials that entropy-based rules may miss.
+[[rules]]
+id = "literal-config-credential"
+description = "Literal credential in environment, YAML, properties or JSON"
+path = '''(?i)(?:\.env(?:\.[^/]+)?|\.(?:ya?ml|properties|json|md|toml))$'''
+regex = '''(?im)^[ \t]*["']?(?:jwt_secret|[a-z0-9_-]*password|[a-z0-9_-]*api[_-]?key|[a-z0-9_-]*secret|[a-z0-9_-]*access[_-]?token)["']?[ \t]*[:=][ \t]*["']?([a-zA-Z0-9_+/=.-]{4,})(?:["']|[ \t]*(?:[,#\\]|$))'''
+secretGroup = 1
+
+[[rules.allowlists]]
+description = "Explicit nonfunctional documentation/test placeholders only"
+regexTarget = "secret"
+regexes = ['''^(?:null|true|false|CHANGE_ME|REPLACE_ME|test-only-[a-z0-9-]+|secreto-interno-fuerte|otro-secreto-interno-fuerte|TEST-tu-access-token|tu-secreto-de-webhook)$''']

@@ -73,6 +73,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  cryptography:
+    dependency: transitive
+    description:
+      name: cryptography
+      sha256: "3eda3029d34ec9095a27a198ac9785630fe525c0eb6a49f3d575272f8e792ef0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.9.0"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -145,6 +153,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.10.0"
+  firebase_messaging:
+    dependency: transitive
+    description:
+      name: firebase_messaging
+      sha256: "55cf1000dd72d229ebff3ce6a399bd35705a7675275478b31308afd90ac85751"
+      url: "https://pub.dev"
+    source: hosted
+    version: "16.5.0"
+  firebase_messaging_platform_interface:
+    dependency: transitive
+    description:
+      name: firebase_messaging_platform_interface
+      sha256: e5fbb62bd23a27c983825277877ac91fdfdb6bfb31c6e5399700963ae586e339
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.9.3"
+  firebase_messaging_web:
+    dependency: transitive
+    description:
+      name: firebase_messaging_web
+      sha256: "663d320e90a41fe57d651ec79df2bc831bf29e051bc0c2cd41faf3106eb412d9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.4"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -315,6 +347,27 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/gymsas_firebase_auth"
+      relative: true
+    source: path
+    version: "0.1.0"
+  gymsas_firebase_messaging:
+    dependency: "direct main"
+    description:
+      path: "packages/gymsas_firebase_messaging"
+      relative: true
+    source: path
+    version: "0.1.0"
+  gymsas_notifications:
+    dependency: "direct main"
+    description:
+      path: "packages/gymsas_notifications"
+      relative: true
+    source: path
+    version: "0.1.0"
+  gymsas_offline:
+    dependency: "direct main"
+    description:
+      path: "packages/gymsas_offline"
       relative: true
     source: path
     version: "0.1.0"

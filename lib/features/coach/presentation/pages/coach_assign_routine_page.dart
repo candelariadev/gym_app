@@ -8,17 +8,25 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/routine_builder_models.dart';
 import '../controllers/trainer_clients_controller.dart';
 import '../localization/client_catalog_localizations.dart';
+import '../../application/routine_assignment_controller.dart';
+import '../../../notifications/application/notifications_controller.dart';
+import '../../../notifications/presentation/routine_notification_panel.dart';
+import '../../../notifications/presentation/notification_localizations.dart';
 
 class CoachAssignRoutinePage extends StatefulWidget {
   const CoachAssignRoutinePage({
     super.key,
     required this.getTrainerClients,
     required this.assignWorkout,
+    this.notifications,
+    this.isCurrentAccount,
   });
 
   static const routeName = '/coach/assign-routine';
   final GetTrainerClientsUseCase getTrainerClients;
   final AssignWorkoutUseCase assignWorkout;
+  final NotificationsController? notifications;
+  final bool Function()? isCurrentAccount;
 
   @override
   State<CoachAssignRoutinePage> createState() => _CoachAssignRoutinePageState();
@@ -29,12 +37,18 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
   final Set<String> _selectedUserIds = <String>{};
   late DateTime _startDate;
   bool _preselectionApplied = false;
-  bool _publishing = false;
+  late final RoutineAssignmentController _assignment;
+  bool get _publishing => _assignment.publishing;
   bool _published = false;
 
   @override
   void initState() {
     super.initState();
+    _assignment = RoutineAssignmentController(
+      assignWorkout: widget.assignWorkout,
+      notifications: widget.notifications?.repository,
+      isCurrentAccount: widget.isCurrentAccount,
+    )..addListener(_refresh);
     final now = DateTime.now();
     _startDate = DateTime(now.year, now.month, now.day);
     _clientsController = TrainerClientsController(
@@ -45,6 +59,9 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
 
   @override
   void dispose() {
+    _assignment
+      ..removeListener(_refresh)
+      ..dispose();
     _clientsController
       ..removeListener(_refresh)
       ..dispose();
@@ -69,59 +86,51 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
 
   Future<void> _publish(RoutineDraft routine) async {
     if (_publishing || _selectedUserIds.isEmpty) return;
-    setState(() => _publishing = true);
-    var completed = 0;
-    try {
-      for (final userId in _selectedUserIds) {
-        await widget.assignWorkout(
-          routine.toCommand(userId: userId, startDate: _startDate),
-        );
-        completed++;
-      }
-      if (!mounted) return;
-      setState(() => _published = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).routinePublished(completed),
-          ),
-        ),
-      );
-    } on WorkoutException catch (error) {
-      if (!mounted) return;
-      final detail = error.message?.trim();
-      final prefix = completed > 0
-          ? '$completed asignaciones completadas. '
-          : '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '$prefix${detail?.isNotEmpty == true ? detail : _errorMessage(error.code)}',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _publishing = false);
-    }
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final candidates = <String, AssignableClient>{
+      if (args is AssignRoutineArgs)
+        for (final c in args.preselectedClients) c.userId: c,
+      for (final c in _clientsController.clients)
+        c.user: AssignableClient(id: c.id, userId: c.user, name: c.name),
+    };
+    final clients = _selectedUserIds
+        .map((id) => candidates[id])
+        .whereType<AssignableClient>()
+        .toList();
+    if (clients.length != _selectedUserIds.length) return;
+    await _assignment.publish(routine, clients, _startDate);
+    if (!mounted || widget.isCurrentAccount?.call() == false) return;
+    final completed = _assignment.confirmed.length,
+        l10n = AppLocalizations.of(context);
+    setState(
+      () => _published = _selectedUserIds.every(
+        _assignment.confirmed.containsKey,
+      ),
+    );
+    final message = _assignment.error == null
+        ? l10n.routinePublished(completed)
+        : completed > 0
+        ? l10n.routineAssignmentPartial(completed)
+        : _errorMessage(_assignment.error!);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  String _errorMessage(WorkoutErrorCode code) => switch (code) {
-    WorkoutErrorCode.invalidInput =>
-      'Revisa los días, ejercicios y valores de la rutina.',
-    WorkoutErrorCode.unauthorized =>
-      'Tu sesión expiró. Inicia sesión nuevamente.',
-    WorkoutErrorCode.forbidden =>
-      'No tienes permisos para asignar esta rutina.',
-    WorkoutErrorCode.conflict =>
-      'La rutina cambió o ya existe. Actualiza e intenta de nuevo.',
-    WorkoutErrorCode.quotaExceeded =>
-      'Alcanzaste el límite de rutinas de tu plan.',
-    WorkoutErrorCode.timeout ||
-    WorkoutErrorCode.network ||
-    WorkoutErrorCode.unavailable =>
-      'No fue posible conectar con el servicio. Intenta nuevamente.',
-    _ => 'No fue posible asignar la rutina.',
-  };
+  String _errorMessage(WorkoutErrorCode code) {
+    final l = AppLocalizations.of(context);
+    return switch (code) {
+      WorkoutErrorCode.invalidInput => l.routineAssignmentInvalid,
+      WorkoutErrorCode.unauthorized => l.routineAssignmentAuth,
+      WorkoutErrorCode.forbidden => l.routineAssignmentForbidden,
+      WorkoutErrorCode.conflict => l.routineAssignmentConflict,
+      WorkoutErrorCode.quotaExceeded => l.routineAssignmentQuota,
+      WorkoutErrorCode.timeout ||
+      WorkoutErrorCode.network ||
+      WorkoutErrorCode.unavailable => l.routineAssignmentNetwork,
+      _ => l.routineAssignmentError,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,13 +148,13 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: Text(l10n.assignRoutineTitle)),
       body: routine == null
-          ? const Center(
+          ? Center(
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.large),
-                child: Text('Primero crea una rutina para poder asignarla.'),
+                padding: const EdgeInsets.all(AppSpacing.large),
+                child: Text(l10n.routineAssignmentMissing),
               ),
             )
           : SafeArea(
@@ -161,7 +170,10 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                         GymLabeledField(
                           label: l10n.startDateLabel,
                           child: InkWell(
-                            onTap: _pickStartDate,
+                            onTap:
+                                _publishing || _assignment.confirmed.isNotEmpty
+                                ? null
+                                : _pickStartDate,
                             borderRadius: BorderRadius.circular(12),
                             child: InputDecorator(
                               decoration: const InputDecoration(
@@ -193,6 +205,19 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.large),
+                  if (_assignment.confirmed.isNotEmpty &&
+                      widget.notifications != null)
+                    RoutineNotificationPanel(
+                      controller: widget.notifications!,
+                      targets: _assignment.confirmed.values.toList(),
+                    ),
+                  if (_assignment.notificationError != null)
+                    GymStatusMessage(
+                      label: l10n.notificationError(
+                        _assignment.notificationError!,
+                      ),
+                      warning: true,
+                    ),
                   ElevatedButton.icon(
                     onPressed: _published
                         ? () => Navigator.of(
@@ -243,7 +268,7 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
       );
     }
     if (clients.isEmpty) {
-      return const Text('No hay clientes activos para asignar.');
+      return Text(l10n.routineAssignmentNoClients);
     }
     return Column(
       children: clients
@@ -255,7 +280,10 @@ class _CoachAssignRoutinePageState extends State<CoachAssignRoutinePage> {
               title: Text(client.name),
               subtitle: Text(client.user),
               secondary: CircleAvatar(child: Text(client.initials)),
-              onChanged: _publishing
+              onChanged:
+                  _publishing ||
+                      _published ||
+                      _assignment.confirmed.containsKey(client.user)
                   ? null
                   : (_) => setState(() {
                       if (selected) {
@@ -294,7 +322,7 @@ class _RoutineSummary extends StatelessWidget {
             l10n.routineMetadata(routine.durationWeeks, routine.totalExercises),
           ),
           const SizedBox(height: AppSpacing.small),
-          Text('${routine.days.length} días de entrenamiento'),
+          Text(l10n.routineTrainingDays(routine.days.length)),
         ],
       ),
     );

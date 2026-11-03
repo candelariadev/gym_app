@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gymsas_payments/gymsas_payments.dart';
+import 'package:gymsas_design_system/gymsas_design_system.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../application/checkout_controller.dart';
 
 class PlansCheckoutPage extends StatefulWidget {
@@ -39,7 +41,11 @@ class _PlansCheckoutPageState extends State<PlansCheckoutPage> {
       future: _plans,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: GymLoadingStatus(
+              label: AppLocalizations.of(context).loadingData,
+            ),
+          );
         }
         if (snapshot.hasError) {
           return Center(

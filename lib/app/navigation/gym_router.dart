@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gymsas_auth/gymsas_auth.dart';
+import 'package:gymsas_design_system/gymsas_design_system.dart';
+
+import '../../l10n/app_localizations.dart';
 
 import '../../features/auth/presentation/controllers/login_form_controller.dart';
 import '../../features/auth/presentation/controllers/federated_auth_controller.dart';
@@ -21,6 +24,9 @@ import '../../features/workout/presentation/pages/workout_session_page.dart';
 import '../../features/workout/presentation/pages/workout_today_page.dart';
 import '../../features/payments/presentation/pages/plans_checkout_page.dart';
 import '../app_dependencies.dart';
+import '../../features/notifications/presentation/notifications_page.dart';
+import '../../features/notifications/presentation/notification_routine_page.dart';
+import 'package:gymsas_notifications/gymsas_notifications.dart';
 
 enum GymRoutePath {
   loading('/'),
@@ -73,6 +79,7 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
               dependencies.trace,
             ) {
     _dependencies.sessionController.addListener(_onSessionChanged);
+    _dependencies.notificationsController?.addListener(_onNotificationChanged);
     _federatedController?.addListener(_onFederatedFlowChanged);
   }
 
@@ -114,10 +121,16 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
       });
     }
     final page = switch (route) {
-      GymRoutePath.loading => const MaterialPage<void>(
-        key: ValueKey('loading'),
+      GymRoutePath.loading => MaterialPage<void>(
+        key: const ValueKey('loading'),
         name: '/',
-        child: Scaffold(body: Center(child: CircularProgressIndicator())),
+        child: Scaffold(
+          body: Center(
+            child: GymLoadingStatus(
+              label: AppLocalizations.of(context).sessionRestoring,
+            ),
+          ),
+        ),
       ),
       GymRoutePath.login => MaterialPage<void>(
         key: const ValueKey('login'),
@@ -147,6 +160,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
           onCreateRoutine: () => _pushNamed(CoachCreateRoutinePage.routeName),
           onOpenExerciseCatalog: () =>
               _pushNamed(CoachExerciseLibraryPage.routeName),
+          onOpenNotifications: _dependencies.notificationsController == null
+              ? null
+              : () => _pushNamed(NotificationsPage.routeName),
           onOpenPlans: session.canManageSubscription
               ? () => _pushNamed(PlansCheckoutPage.routeName)
               : null,
@@ -165,6 +181,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
               ? () => _pushNamed(PlansCheckoutPage.routeName)
               : null,
           myWorkoutsController: _dependencies.myWorkoutsController,
+          onOpenNotifications: _dependencies.notificationsController == null
+              ? null
+              : () => _pushNamed(NotificationsPage.routeName),
         ),
       ),
     };
@@ -190,6 +209,32 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
   Route<dynamic>? _onGenerateFeatureRoute(RouteSettings settings) {
     final session = _dependencies.sessionController.session;
     final role = session?.role;
+    if (settings.name == NotificationsPage.routeName &&
+        session != null &&
+        _dependencies.notificationsController != null) {
+      return MaterialPageRoute<dynamic>(
+        builder: (_) => NotificationsPage(
+          controller: _dependencies.notificationsController!,
+        ),
+        settings: settings,
+      );
+    }
+    if (settings.name == NotificationRoutinePage.routeName &&
+        role == UserRole.advised &&
+        settings.arguments is PushRoutineReference &&
+        _dependencies.getConfirmedWorkout != null) {
+      final reference = settings.arguments as PushRoutineReference;
+      return MaterialPageRoute<dynamic>(
+        builder: (_) => NotificationRoutinePage(
+          routineId: reference.routineId,
+          verify: _dependencies.getConfirmedWorkout!,
+          canVerify: () =>
+              identical(session, _dependencies.sessionController.session) &&
+              session?.isExpired == false,
+        ),
+        settings: settings,
+      );
+    }
     if (settings.name == PlansCheckoutPage.routeName) {
       if (session?.canManageSubscription != true) return null;
       return MaterialPageRoute<dynamic>(
@@ -213,6 +258,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         (_) => CoachAssignRoutinePage(
           getTrainerClients: _dependencies.getTrainerClientsUseCase,
           assignWorkout: _dependencies.assignWorkoutUseCase,
+          notifications: _dependencies.notificationsController,
+          isCurrentAccount: () =>
+              identical(session, _dependencies.sessionController.session),
         ),
       (UserRole.trainer, CoachExerciseLibraryPage.routeName) =>
         (_) => CoachExerciseLibraryPage(
@@ -225,10 +273,29 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         myWorkoutsController: _dependencies.myWorkoutsController,
         store: _dependencies.workoutSessionStore,
       ),
-      (UserRole.advised, MyProgressPage.routeName) =>
-        (_) => const MyProgressPage(),
+      (UserRole.advised, MyProgressPage.routeName) => (_) => MyProgressPage(
+        getProgress: _dependencies.getWorkoutProgress,
+      ),
       (UserRole.advised, WorkoutSessionPage.routeName) =>
-        (_) => WorkoutSessionPage(store: _dependencies.workoutSessionStore),
+        (_) => WorkoutSessionPage(
+          store: _dependencies.workoutSessionStore,
+          onPauseSession: (id) async {
+            try {
+              await _dependencies.workoutSessionStore.flushPerformance();
+            } on Object {
+              return false;
+            }
+            return _dependencies.myWorkoutsController.pauseSession(id);
+          },
+          onFinishSession: (id) async {
+            try {
+              await _dependencies.workoutSessionStore.flushPerformance();
+            } on Object {
+              return false;
+            }
+            return _dependencies.myWorkoutsController.finishSession(id);
+          },
+        ),
       (UserRole.advised, MyTrainersPage.routeName) => (_) => MyTrainersPage(
         getMyTrainers: _dependencies.getMyTrainersUseCase,
       ),
@@ -248,10 +315,24 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
   void _onSessionChanged() {
     if (_dependencies.sessionController.session == null) {
       _dependencies.workoutSessionStore.reset();
-      _dependencies.myWorkoutsController.load();
+      _dependencies.myWorkoutsController.clear();
     }
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     notifyListeners();
+    _onNotificationChanged();
+  }
+
+  void _onNotificationChanged() {
+    if (_dependencies.sessionController.isRestoring) return;
+    final reference = _dependencies.notificationsController?.takeOpen();
+    if (reference == null) return;
+    final session = _dependencies.sessionController.session;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (identical(session, _dependencies.sessionController.session) &&
+          session?.role == UserRole.advised) {
+        _pushNamed(NotificationRoutinePage.routeName, arguments: reference);
+      }
+    });
   }
 
   void _onFederatedFlowChanged() => notifyListeners();
@@ -259,6 +340,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
   @override
   void dispose() {
     _dependencies.sessionController.removeListener(_onSessionChanged);
+    _dependencies.notificationsController?.removeListener(
+      _onNotificationChanged,
+    );
     _federatedController?.removeListener(_onFederatedFlowChanged);
     _federatedController?.dispose();
     _loginController.dispose();

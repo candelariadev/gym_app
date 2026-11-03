@@ -1,8 +1,15 @@
 library;
+export 'src/organisms/gym_sync_status.dart';
+
+export 'src/molecules/gym_loading_status.dart';
+export 'src/organisms/gym_loading_overlay.dart';
+
+export 'src/molecules/gym_progress_chart.dart';
 
 export 'src/atoms/gym_primary_button.dart';
 export 'src/atoms/gym_label_value.dart';
 export 'src/atoms/gym_compact_metric.dart';
+export 'src/atoms/gym_completion_toggle.dart';
 export 'src/atoms/gym_surface.dart';
 export 'src/atoms/gym_tag.dart';
 export 'src/atoms/gym_text_field.dart';
@@ -18,8 +25,11 @@ export 'src/molecules/gym_section_card.dart';
 export 'src/organisms/gym_client_list_card.dart';
 export 'src/organisms/gym_workout_summary_card.dart';
 export 'src/organisms/gym_workout_day_card.dart';
+export 'src/organisms/gym_session_action_bar.dart';
 export 'src/templates/gym_scrollable_page.dart';
 export 'src/templates/role_dashboard_template.dart';
 export 'src/theme/app_colors.dart';
 export 'src/theme/app_spacing.dart';
 export 'src/theme/app_theme.dart';
+export 'src/molecules/gym_status_message.dart';
+export 'src/organisms/gym_action_status_card.dart';

@@ -7,6 +7,25 @@ import 'package:test/test.dart';
 
 void main() {
   test(
+    'conserva HTTP 401 con cuerpo vacio para detener sync y pedir acceso',
+    () async {
+      final client = HttpGraphQlClient(
+        endpoint: 'https://api.example/graphql',
+        httpClient: MockClient((_) async => http.Response('', 401)),
+      );
+      await expectLater(
+        client.execute(document: 'query Mine { mine }'),
+        throwsA(
+          isA<ApiClientException>().having(
+            (e) => e.statusCode,
+            'statusCode',
+            401,
+          ),
+        ),
+      );
+    },
+  );
+  test(
     'propaga correlation id y registra una traza sin payload sensible',
     () async {
       final trace = _RecordingTrace();

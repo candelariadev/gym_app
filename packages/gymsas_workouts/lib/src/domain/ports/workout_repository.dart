@@ -7,7 +7,16 @@ abstract interface class WorkoutRepository {
   Future<Workout> assign(AssignWorkoutCommand command);
   Future<List<Workout>> getMyWorkouts({bool? activeOnly});
   Future<List<WorkoutSession>> getMyWorkoutSessions({bool? activeOnly});
-  Future<WorkoutSession> startWorkoutSession(StartWorkoutSessionCommand command);
+  Future<WorkoutSession> startWorkoutSession(
+    StartWorkoutSessionCommand command,
+  );
   Future<WorkoutSession> pauseWorkoutSession(String sessionId);
   Future<WorkoutSession> finishWorkoutSession(String sessionId);
+}
+
+abstract interface class TimestampedWorkoutSessionPort {
+  Future<WorkoutSession> finishWorkoutSessionAt(
+    String sessionId,
+    DateTime completedAt,
+  );
 }

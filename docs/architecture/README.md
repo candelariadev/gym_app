@@ -36,7 +36,11 @@ packages/
 ├── gymsas_dashboard/
 ├── gymsas_design_system/
 ├── gymsas_exercises/
-└── gymsas_payments/      # Dominio de pago, puertos y adaptadores nativos
+├── gymsas_payments/      # Dominio de pago, puertos y adaptadores nativos
+├── gymsas_offline/       # Persistencia cifrada y consultas locales opt-in
+├── gymsas_workouts/      # Rutinas, sesiones y outbox offline
+├── gymsas_notifications/ # Decisiones durables, cuota y seguimiento vía BFF
+└── gymsas_firebase_messaging/ # Adaptador PushDevice Android/iOS
 ```
 
 ## Reglas
@@ -56,4 +60,11 @@ packages/
 implementa. `gymsas_payments` define `PaymentGateway`; Mercado Pago lo
 implementa. Estas fronteras permiten sustituir proveedores sin reescribir el
 flujo de negocio.
+
+`gymsas_notifications` define `PushDevice`; `gymsas_firebase_messaging` lo
+implementa. La asignación confirmada no implica consentimiento de notificación.
+El historial y las decisiones consentidas son locales primero; permisos, cuotas
+y apertura desde una referencia push se revalidan en servidor. Ver
+[notificaciones](../notifications/README.md) y
+[reglas offline first](offline_first_context_prompt.md).
 

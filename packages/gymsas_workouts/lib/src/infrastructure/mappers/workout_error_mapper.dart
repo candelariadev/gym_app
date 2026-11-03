@@ -15,12 +15,24 @@ class WorkoutErrorMapper {
         401 => WorkoutErrorCode.unauthorized,
         403 => WorkoutErrorCode.forbidden,
         402 => WorkoutErrorCode.quotaExceeded,
-        409 => WorkoutErrorCode.conflict,
+        404 || 409 => WorkoutErrorCode.conflict,
         502 || 503 || 504 => WorkoutErrorCode.unavailable,
         _ => WorkoutErrorCode.server,
       }, message);
     }
     if (error is ApiClientException) {
+      if (error.statusCode == 401) {
+        return const WorkoutException(WorkoutErrorCode.unauthorized);
+      }
+      if (error.statusCode == 403) {
+        return const WorkoutException(WorkoutErrorCode.forbidden);
+      }
+      if (error.statusCode == 404 || error.statusCode == 409) {
+        return const WorkoutException(WorkoutErrorCode.conflict);
+      }
+      if (error.statusCode == 400 || error.statusCode == 422) {
+        return const WorkoutException(WorkoutErrorCode.invalidInput);
+      }
       return WorkoutException(switch (error.code) {
         ApiClientErrorCode.server => WorkoutErrorCode.server,
         ApiClientErrorCode.invalidResponse => WorkoutErrorCode.invalidResponse,

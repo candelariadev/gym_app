@@ -119,7 +119,7 @@ class _CoachExerciseLibraryPageState extends State<CoachExerciseLibraryPage> {
   Widget _buildContent(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (_controller.isLoading && _controller.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: GymLoadingStatus(label: l10n.loadingData));
     }
     if (_controller.errorCode != null && _controller.items.isEmpty) {
       return _CatalogMessage(

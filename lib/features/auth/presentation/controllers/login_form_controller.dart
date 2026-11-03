@@ -22,6 +22,7 @@ class LoginFormController extends ChangeNotifier {
     required String user,
     required String password,
   }) async {
+    if (_isLoading || _isDisposed) return null;
     _isLoading = true;
     _errorCode = null;
     _notifyListeners();

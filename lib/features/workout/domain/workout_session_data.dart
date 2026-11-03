@@ -1,4 +1,5 @@
 import 'workout_exercise_metadata.dart';
+import 'package:gymsas_workouts/gymsas_workouts.dart' show WorkoutSet;
 
 class WorkoutExercise {
   const WorkoutExercise({
@@ -11,6 +12,7 @@ class WorkoutExercise {
     this.imageUrl,
     this.exerciseId,
     this.metadata,
+    this.recordedSets = const [],
   });
 
   final int order;
@@ -22,6 +24,7 @@ class WorkoutExercise {
   final String? imageUrl;
   final String? exerciseId;
   final WorkoutExerciseMetadata? metadata;
+  final List<WorkoutSet> recordedSets;
 }
 
 class WorkoutSessionData {

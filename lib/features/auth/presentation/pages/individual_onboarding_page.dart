@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gymsas_auth/gymsas_auth.dart';
+import 'package:gymsas_design_system/gymsas_design_system.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/federated_auth_controller.dart';
@@ -81,7 +82,9 @@ class _IndividualOnboardingPageState extends State<IndividualOnboardingPage> {
   }
 
   Future<void> _submit() async {
+    if (widget.controller.isLoading) return;
     if (!(_form.currentState?.validate() ?? false)) return;
+    FocusScope.of(context).unfocus();
     final advised = _role == UserRole.advised
         ? AdvisedOnboarding(
             birthdate: _selectedBirthdate!,
@@ -122,177 +125,184 @@ class _IndividualOnboardingPageState extends State<IndividualOnboardingPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Completa tu cuenta individual')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Form(
-                key: _form,
-                child: AnimatedBuilder(
-                  animation: widget.controller,
-                  builder: (context, _) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        widget.controller.flow?.identity.email ?? '',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      DropdownButtonFormField<UserRole>(
-                        initialValue: _role,
-                        decoration: const InputDecoration(labelText: 'Rol'),
-                        items: const [
-                          DropdownMenuItem(
-                            value: UserRole.advised,
-                            child: Text('Usuario asesorado'),
-                          ),
-                          DropdownMenuItem(
-                            value: UserRole.trainer,
-                            child: Text('Entrenador'),
-                          ),
-                        ],
-                        onChanged: (value) => setState(() => _role = value!),
-                      ),
-                      TextFormField(
-                        controller: _nickname,
-                        decoration: const InputDecoration(
-                          labelText: 'Nickname',
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (context, _) => GymLoadingOverlay(
+        isLoading: widget.controller.isLoading,
+        label: l10n.onboardingLoading,
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Completa tu cuenta individual')),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Form(
+                    key: _form,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          widget.controller.flow?.identity.email ?? '',
+                          textAlign: TextAlign.center,
                         ),
-                        validator: _required,
-                      ),
-                      TextFormField(
-                        controller: _password,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Contraseña local de respaldo',
-                        ),
-                        validator: (value) {
-                          if ((value ?? '').length < 8) {
-                            return 'Usa al menos 8 caracteres';
-                          }
-                          if (!RegExp(r'\d').hasMatch(value!)) {
-                            return 'Agrega al menos un número';
-                          }
-                          if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
-                            return 'Agrega al menos un símbolo';
-                          }
-                          return null;
-                        },
-                      ),
-                      if (_role == UserRole.advised) ...[
-                        TextFormField(
-                          controller: _birthdate,
-                          readOnly: true,
-                          onTap: _selectBirthdate,
-                          decoration: InputDecoration(
-                            labelText: l10n.onboardingBirthdateLabel,
-                            suffixIcon: const Icon(
-                              Icons.calendar_today_outlined,
-                            ),
-                          ),
-                          validator: (_) => _selectedBirthdate == null
-                              ? l10n.onboardingBirthdateRequired
-                              : null,
-                        ),
-                        DropdownButtonFormField<UserGender>(
-                          initialValue: _gender,
-                          decoration: InputDecoration(
-                            labelText: l10n.onboardingGenderLabel,
-                          ),
-                          items: [
+                        const SizedBox(height: 20),
+                        DropdownButtonFormField<UserRole>(
+                          initialValue: _role,
+                          decoration: const InputDecoration(labelText: 'Rol'),
+                          items: const [
                             DropdownMenuItem(
-                              value: UserGender.male,
-                              child: Text(l10n.onboardingGenderMale),
+                              value: UserRole.advised,
+                              child: Text('Usuario asesorado'),
                             ),
                             DropdownMenuItem(
-                              value: UserGender.female,
-                              child: Text(l10n.onboardingGenderFemale),
-                            ),
-                            DropdownMenuItem(
-                              value: UserGender.other,
-                              child: Text(l10n.onboardingGenderOther),
+                              value: UserRole.trainer,
+                              child: Text('Entrenador'),
                             ),
                           ],
-                          onChanged: (value) => setState(() => _gender = value),
-                          validator: (value) => value == null
-                              ? l10n.onboardingGenderRequired
-                              : null,
+                          onChanged: (value) => setState(() => _role = value!),
                         ),
                         TextFormField(
-                          controller: _weight,
-                          keyboardType: TextInputType.number,
+                          controller: _nickname,
                           decoration: const InputDecoration(
-                            labelText: 'Peso (kg)',
-                          ),
-                          validator: (value) =>
-                              double.tryParse(value ?? '') == null
-                              ? 'Número inválido'
-                              : null,
-                        ),
-                        TextFormField(
-                          controller: _goals,
-                          decoration: const InputDecoration(
-                            labelText: 'Objetivos separados por coma',
+                            labelText: 'Nickname',
                           ),
                           validator: _required,
                         ),
                         TextFormField(
-                          controller: _notes,
+                          controller: _password,
+                          obscureText: true,
                           decoration: const InputDecoration(
-                            labelText: 'Notas (opcional)',
+                            labelText: 'Contraseña local de respaldo',
                           ),
+                          validator: (value) {
+                            if ((value ?? '').length < 8) {
+                              return 'Usa al menos 8 caracteres';
+                            }
+                            if (!RegExp(r'\d').hasMatch(value!)) {
+                              return 'Agrega al menos un número';
+                            }
+                            if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
+                              return 'Agrega al menos un símbolo';
+                            }
+                            return null;
+                          },
                         ),
-                      ] else ...[
-                        TextFormField(
-                          controller: _bio,
-                          decoration: const InputDecoration(
-                            labelText: 'Biografía',
+                        if (_role == UserRole.advised) ...[
+                          TextFormField(
+                            controller: _birthdate,
+                            readOnly: true,
+                            onTap: _selectBirthdate,
+                            decoration: InputDecoration(
+                              labelText: l10n.onboardingBirthdateLabel,
+                              suffixIcon: const Icon(
+                                Icons.calendar_today_outlined,
+                              ),
+                            ),
+                            validator: (_) => _selectedBirthdate == null
+                                ? l10n.onboardingBirthdateRequired
+                                : null,
                           ),
-                          validator: _required,
-                        ),
-                        TextFormField(
-                          controller: _certifications,
-                          decoration: const InputDecoration(
-                            labelText: 'Certificaciones separadas por coma',
+                          DropdownButtonFormField<UserGender>(
+                            initialValue: _gender,
+                            decoration: InputDecoration(
+                              labelText: l10n.onboardingGenderLabel,
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: UserGender.male,
+                                child: Text(l10n.onboardingGenderMale),
+                              ),
+                              DropdownMenuItem(
+                                value: UserGender.female,
+                                child: Text(l10n.onboardingGenderFemale),
+                              ),
+                              DropdownMenuItem(
+                                value: UserGender.other,
+                                child: Text(l10n.onboardingGenderOther),
+                              ),
+                            ],
+                            onChanged: (value) =>
+                                setState(() => _gender = value),
+                            validator: (value) => value == null
+                                ? l10n.onboardingGenderRequired
+                                : null,
                           ),
-                          validator: _required,
-                        ),
-                        TextFormField(
-                          controller: _experience,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Años de experiencia',
+                          TextFormField(
+                            controller: _weight,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Peso (kg)',
+                            ),
+                            validator: (value) =>
+                                double.tryParse(value ?? '') == null
+                                ? 'Número inválido'
+                                : null,
                           ),
-                          validator: (value) =>
-                              int.tryParse(value ?? '') == null
-                              ? 'Número inválido'
-                              : null,
-                        ),
-                      ],
-                      if (widget.controller.errorCode != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            l10n.errorMessage(widget.controller.errorCode!),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                          TextFormField(
+                            controller: _goals,
+                            decoration: const InputDecoration(
+                              labelText: 'Objetivos separados por coma',
+                            ),
+                            validator: _required,
+                          ),
+                          TextFormField(
+                            controller: _notes,
+                            decoration: const InputDecoration(
+                              labelText: 'Notas (opcional)',
                             ),
                           ),
+                        ] else ...[
+                          TextFormField(
+                            controller: _bio,
+                            decoration: const InputDecoration(
+                              labelText: 'Biografía',
+                            ),
+                            validator: _required,
+                          ),
+                          TextFormField(
+                            controller: _certifications,
+                            decoration: const InputDecoration(
+                              labelText: 'Certificaciones separadas por coma',
+                            ),
+                            validator: _required,
+                          ),
+                          TextFormField(
+                            controller: _experience,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Años de experiencia',
+                            ),
+                            validator: (value) =>
+                                int.tryParse(value ?? '') == null
+                                ? 'Número inválido'
+                                : null,
+                          ),
+                        ],
+                        if (widget.controller.errorCode != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              l10n.errorMessage(widget.controller.errorCode!),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        FilledButton(
+                          onPressed: widget.controller.isLoading
+                              ? null
+                              : _submit,
+                          child: Text(
+                            widget.controller.isLoading
+                                ? l10n.onboardingLoading
+                                : l10n.onboardingCreateButton,
+                          ),
                         ),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: widget.controller.isLoading ? null : _submit,
-                        child: Text(
-                          widget.controller.isLoading
-                              ? 'Guardando…'
-                              : 'Crear cuenta individual',
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -10,11 +10,13 @@ abstract final class AppTheme {
           brightness: Brightness.light,
           primary: palette.primary,
           secondary: palette.secondary,
+          tertiary: palette.success,
           surface: palette.surface,
           error: palette.error,
         ).copyWith(
           onPrimary: Colors.white,
           onSecondary: palette.textPrimary,
+          onTertiary: Colors.white,
           onSurface: palette.textPrimary,
           surfaceContainerHighest: palette.background,
           outline: palette.border,

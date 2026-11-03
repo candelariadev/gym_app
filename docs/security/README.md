@@ -4,9 +4,9 @@
 
 | Elemento | Ubicación | ¿Se versiona? |
 | --- | --- | --- |
-| `firebase_options.dart` | Flutter | Sí; configuración cliente pública |
-| `google-services.json` | Android | Sí; configuración cliente pública |
-| `GoogleService-Info.plist` | iOS | Sí; configuración cliente pública |
+| `firebase_options.dart` | Flutter | No; se mantiene local por política del proyecto |
+| `google-services.json` | Android | No; se mantiene local por política del proyecto |
+| `GoogleService-Info.plist` | iOS | No; se mantiene local por política del proyecto |
 | Clave pública Mercado Pago | Flutter/env de CI | No es secreta, pero se inyecta por ambiente |
 | Firebase service account | Backend/secret manager | No |
 | Access Token Mercado Pago | Backend/secret manager | No |
@@ -30,6 +30,27 @@ cuenta de servicio Firebase Admin.
 - Producción debe obtener secretos desde CI o un secret manager.
 
 ## Antes de publicar
+
+El repositorio incluye controles locales en `.githooks/`. En cada clon, instala
+Gitleaks y activa los controles:
+
+```bash
+brew install gitleaks
+git config --local core.hooksPath .githooks
+chmod +x .githooks/pre-commit .githooks/pre-push
+python3 scripts/check_secrets.py --working-tree
+python3 scripts/check_secrets.py --staged
+python3 scripts/check_secrets.py --history
+```
+
+El commit revisa el índice completo, incluyendo archivos parcialmente preparados.
+El push revisa el historial de las referencias que se enviarán. Los controles
+bloquean la operación si falta el escáner o falla la revisión. Sólo muestran rutas
+y tipos de hallazgo. No uses `--no-verify` para publicar.
+
+La revisión cubre los candidatos de este repositorio; los archivos locales
+ignorados no se publican y no se copian al escaneo. Las plantillas `.env.example`
+se revisan también y deben dejar vacíos los valores secretos.
 
 ```bash
 git status --short

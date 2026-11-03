@@ -10,6 +10,7 @@ class FederatedAuthController extends ChangeNotifier {
 
   FederatedAuthFlow? _flow;
   bool _loading = false;
+  bool _isDisposed = false;
   AuthErrorCode? _errorCode;
 
   FederatedAuthFlow? get flow => _flow;
@@ -48,10 +49,11 @@ class FederatedAuthController extends ChangeNotifier {
     String operation,
     Future<AuthSession?> Function() action,
   ) async {
+    if (_loading || _isDisposed) return null;
     _loading = true;
     _errorCode = null;
     _trace.record('federated_auth_started', {'operation': operation});
-    notifyListeners();
+    _notifyListeners();
     try {
       return await action();
     } on AuthException catch (error) {
@@ -70,7 +72,17 @@ class FederatedAuthController extends ChangeNotifier {
       return null;
     } finally {
       _loading = false;
-      notifyListeners();
+      _notifyListeners();
     }
+  }
+
+  void _notifyListeners() {
+    if (!_isDisposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 }

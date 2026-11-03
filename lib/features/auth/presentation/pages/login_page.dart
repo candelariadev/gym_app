@@ -27,6 +27,11 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _usesGoogle = false;
+
+  bool get _isLoading =>
+      widget.controller.isLoading ||
+      (widget.federatedController?.isLoading ?? false);
 
   @override
   void dispose() {
@@ -36,7 +41,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _submit() async {
+    if (_isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _usesGoogle = false);
     final session = await widget.controller.submit(
       user: _userController.text,
       password: _passwordController.text,
@@ -45,6 +53,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _googleSignIn() async {
+    if (_isLoading) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _usesGoogle = true);
     final session = await widget.federatedController?.signInWithGoogle();
     if (session != null && mounted) widget.onAuthenticated(session);
   }
@@ -68,92 +79,103 @@ class _LoginPageState extends State<LoginPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Form(
-                key: _formKey,
-                child: AnimatedBuilder(
-                  animation: widget.controller,
-                  builder: (context, _) {
-                    final errorCode = widget.controller.errorCode;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          child: const Icon(
-                            Icons.fitness_center_rounded,
-                            size: 46,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.large),
-                        Text(
-                          l10n.appTitle,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.small),
-                        Text(
-                          l10n.loginSubtitle,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 40),
-                        CredentialsFields(
-                          userController: _userController,
-                          passwordController: _passwordController,
-                          userLabel: l10n.usernameLabel,
-                          userHint: l10n.usernameHint,
-                          passwordLabel: l10n.passwordLabel,
-                          passwordHint: l10n.passwordHint,
-                          userValidator: (value) => _validateUser(value, l10n),
-                          passwordValidator: (value) =>
-                              _validatePassword(value, l10n),
-                          onPasswordSubmitted: _submit,
-                        ),
-                        if (errorCode != null) ...[
-                          const SizedBox(height: AppSpacing.medium),
-                          Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              l10n.errorMessage(errorCode),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: colorScheme.error),
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        widget.controller,
+        widget.federatedController,
+      ]),
+      builder: (context, _) => GymLoadingOverlay(
+        isLoading: _isLoading,
+        label: _usesGoogle ? l10n.loginGoogleLoading : l10n.loginLoading,
+        message: l10n.authLoadingMessage,
+        child: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.large),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: Form(
+                    key: _formKey,
+                    child: Builder(
+                      builder: (context) {
+                        final errorCode = _usesGoogle
+                            ? widget.federatedController?.errorCode
+                            : widget.controller.errorCode;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CircleAvatar(
+                              radius: 48,
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                              child: const Icon(
+                                Icons.fitness_center_rounded,
+                                size: 46,
+                              ),
                             ),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.xLarge),
-                        GymPrimaryButton(
-                          label: l10n.loginButton,
-                          isLoading: widget.controller.isLoading,
-                          onPressed: _submit,
-                        ),
-                        if (widget.federatedController != null) ...[
-                          const SizedBox(height: AppSpacing.medium),
-                          OutlinedButton.icon(
-                            onPressed: widget.federatedController!.isLoading
-                                ? null
-                                : _googleSignIn,
-                            icon: const Icon(Icons.login),
-                            label: const Text('Continuar con Google'),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.large),
-                        Text(
-                          l10n.roleAutoDetected,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ],
-                    );
-                  },
+                            const SizedBox(height: AppSpacing.large),
+                            Text(
+                              l10n.appTitle,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineLarge,
+                            ),
+                            const SizedBox(height: AppSpacing.small),
+                            Text(
+                              l10n.loginSubtitle,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 40),
+                            CredentialsFields(
+                              userController: _userController,
+                              passwordController: _passwordController,
+                              userLabel: l10n.usernameLabel,
+                              userHint: l10n.usernameHint,
+                              passwordLabel: l10n.passwordLabel,
+                              passwordHint: l10n.passwordHint,
+                              userValidator: (value) =>
+                                  _validateUser(value, l10n),
+                              passwordValidator: (value) =>
+                                  _validatePassword(value, l10n),
+                              onPasswordSubmitted: _submit,
+                            ),
+                            if (errorCode != null) ...[
+                              const SizedBox(height: AppSpacing.medium),
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  l10n.errorMessage(errorCode),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: colorScheme.error),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: AppSpacing.xLarge),
+                            GymPrimaryButton(
+                              label: l10n.loginButton,
+                              isLoading: widget.controller.isLoading,
+                              onPressed: _isLoading ? null : _submit,
+                            ),
+                            if (widget.federatedController != null) ...[
+                              const SizedBox(height: AppSpacing.medium),
+                              OutlinedButton.icon(
+                                onPressed: _isLoading ? null : _googleSignIn,
+                                icon: const Icon(Icons.login),
+                                label: Text(l10n.loginGoogleButton),
+                              ),
+                            ],
+                            const SizedBox(height: AppSpacing.large),
+                            Text(
+                              l10n.roleAutoDetected,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -141,4 +141,57 @@ void main() {
     expect(find.text('Monday · 3 exercises'), findsOneWidget);
     expect(find.text('View details'), findsOneWidget);
   });
+
+  testWidgets('GymCompletionToggle comunica claramente el estado', (
+    tester,
+  ) async {
+    var completed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: GymCompletionToggle(
+              isCompleted: completed,
+              label: 'Mark set as finished',
+              completedLabel: 'Set finished',
+              onPressed: () => setState(() => completed = !completed),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Mark set as finished'), findsOneWidget);
+    await tester.tap(find.text('Mark set as finished'));
+    await tester.pumpAndSettle();
+    expect(find.text('Set finished'), findsOneWidget);
+  });
+
+  testWidgets('GymSessionActionBar mantiene disponibles las acciones', (
+    tester,
+  ) async {
+    var paused = false;
+    var finished = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          bottomNavigationBar: GymSessionActionBar(
+            statusText: 'Ready',
+            pauseLabel: 'Pause',
+            finishLabel: 'Finish',
+            canFinish: true,
+            onPause: () => paused = true,
+            onFinish: () => finished = true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Pause'));
+    await tester.tap(find.text('Finish'));
+    expect(paused, isTrue);
+    expect(finished, isTrue);
+  });
 }

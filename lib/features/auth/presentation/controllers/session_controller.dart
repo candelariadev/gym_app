@@ -7,13 +7,16 @@ class SessionController extends ChangeNotifier {
     required SessionRepository sessionRepository,
     required LogoutUseCase logoutUseCase,
     ApiTrace trace = const DeveloperApiTrace(),
+    Future<void> Function()? beforeLogout,
   }) : _sessionRepository = sessionRepository,
        _logoutUseCase = logoutUseCase,
-       _trace = trace;
+       _trace = trace,
+       _beforeLogout = beforeLogout;
 
   final SessionRepository _sessionRepository;
   final LogoutUseCase _logoutUseCase;
   final ApiTrace _trace;
+  final Future<void> Function()? _beforeLogout;
 
   AuthSession? _session;
   bool _isRestoring = true;
@@ -48,10 +51,20 @@ class SessionController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _logoutUseCase();
-    _session = null;
-    _trace.record('session_logout_completed', const {});
-    _notifyListeners();
+    final previous = _session;
+    try {
+      try {
+        await _beforeLogout?.call();
+      } on Object {
+        _trace.record('push_cleanup_deferred', const {});
+      }
+      if (!identical(previous, _session)) return;
+      await _logoutUseCase();
+    } finally {
+      if (identical(previous, _session)) _session = null;
+      _trace.record('session_logout_completed', const {});
+      _notifyListeners();
+    }
   }
 
   void _notifyListeners() {

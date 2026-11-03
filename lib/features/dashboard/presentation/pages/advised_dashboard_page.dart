@@ -17,6 +17,7 @@ class AdvisedDashboardPage extends StatefulWidget {
     required this.onOpenMyTrainer,
     required this.myWorkoutsController,
     this.onOpenPlans,
+    this.onOpenNotifications,
   });
 
   final AuthSession session;
@@ -26,6 +27,7 @@ class AdvisedDashboardPage extends StatefulWidget {
   final VoidCallback onOpenMyTrainer;
   final MyWorkoutsController myWorkoutsController;
   final VoidCallback? onOpenPlans;
+  final VoidCallback? onOpenNotifications;
 
   @override
   State<AdvisedDashboardPage> createState() => _AdvisedDashboardPageState();
@@ -96,6 +98,13 @@ class _AdvisedDashboardPageState extends State<AdvisedDashboardPage> {
           ),
         ],
         content: [
+          if (widget.onOpenNotifications != null)
+            DashboardActionTile(
+              title: l10n.notificationsTitle,
+              subtitle: l10n.notificationsDescription,
+              icon: Icons.notifications_outlined,
+              onTap: widget.onOpenNotifications!,
+            ),
           DashboardActionTile(
             title: l10n.todayWorkoutAction,
             subtitle: l10n.todayWorkoutActionDescription,

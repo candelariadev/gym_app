@@ -9,6 +9,373 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get routineAssignmentInvalid =>
+      'Check the routine days, exercises and values.';
+
+  @override
+  String get routineAssignmentAuth => 'Your session expired. Sign in again.';
+
+  @override
+  String get routineAssignmentForbidden =>
+      'You do not have permission to assign this routine.';
+
+  @override
+  String get routineAssignmentConflict =>
+      'The routine changed or already exists. Refresh and try again.';
+
+  @override
+  String get routineAssignmentQuota =>
+      'You reached your plan\'s routine limit.';
+
+  @override
+  String get routineAssignmentNetwork =>
+      'Could not connect to the service. Try again.';
+
+  @override
+  String get routineAssignmentError => 'Could not assign the routine.';
+
+  @override
+  String get routineAssignmentMissing =>
+      'Create a routine before assigning it.';
+
+  @override
+  String get routineAssignmentNoClients =>
+      'There are no active clients to assign.';
+
+  @override
+  String routineTrainingDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count training days',
+      one: '1 training day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pushRemovalPending =>
+      'Server deactivation pending. It will retry when this account is connected.';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsDescription =>
+      'Device permissions and request status';
+
+  @override
+  String get notificationQuotaTitle => 'Notification quota';
+
+  @override
+  String get notificationQuotaLoading => 'Checking quota…';
+
+  @override
+  String get notificationQuotaUnavailable =>
+      'Quota could not be checked. Refresh before confirming.';
+
+  @override
+  String get notificationQuotaDisabled =>
+      'Notifications are not enabled for this plan.';
+
+  @override
+  String get notificationQuotaUnlimited =>
+      'Unlimited notifications. The server will revalidate access.';
+
+  @override
+  String notificationQuotaRemaining(int remaining, int reserved) {
+    return 'Available: $remaining. Reserved: $reserved.';
+  }
+
+  @override
+  String get notificationQuotaStale =>
+      'Saved quota, not checked now. It will be revalidated when connected.';
+
+  @override
+  String notificationQuotaReset(String date) {
+    return 'Quota resets: $date UTC';
+  }
+
+  @override
+  String get notificationQuotaExhausted =>
+      'No notifications remain for this period.';
+
+  @override
+  String get notificationRefresh => 'Refresh status and quota';
+
+  @override
+  String get notificationNotifyClient => 'Notify the client';
+
+  @override
+  String get notificationConfirmTitle => 'Notify the client?';
+
+  @override
+  String get notificationConfirmBody =>
+      'The routine is already confirmed on the server. If offline, we will save your decision and submit it when connected, revalidating access and quota.';
+
+  @override
+  String get notificationConfirm => 'Confirm notification';
+
+  @override
+  String get notificationCancel => 'Not now';
+
+  @override
+  String get notificationReady =>
+      'Routine confirmed on the server. No notification has been requested.';
+
+  @override
+  String get notificationQueued =>
+      'Decision saved on this device; waiting for server confirmation.';
+
+  @override
+  String get notificationPending => 'Request accepted by GymSAS; push pending.';
+
+  @override
+  String get notificationProcessing => 'The server is processing the push.';
+
+  @override
+  String get notificationAccepted =>
+      'Accepted by the push provider. This does not confirm delivery or reading.';
+
+  @override
+  String get notificationFailed =>
+      'The push definitively failed. The routine remains available.';
+
+  @override
+  String get notificationUncertain =>
+      'Uncertain result. Quota stays reserved; it will not be resent automatically.';
+
+  @override
+  String get notificationNoDevices =>
+      'The client has no devices registered to receive notifications.';
+
+  @override
+  String get notificationRetry => 'Retry the same request';
+
+  @override
+  String get notificationRiskTitle => 'The client could receive a duplicate';
+
+  @override
+  String get notificationRiskBody =>
+      'The provider may have accepted the previous push. This retry requires your confirmation and keeps the same request and quota reservation.';
+
+  @override
+  String get notificationHistoryEmpty =>
+      'Confirmed routines and their notifications will appear here.';
+
+  @override
+  String get notificationErrorNetwork =>
+      'Cannot connect to the service. Your decision remains saved.';
+
+  @override
+  String get notificationErrorAuth =>
+      'Sign in again to send or check notifications.';
+
+  @override
+  String get notificationErrorForbidden =>
+      'You cannot access this request or the subscription is inactive.';
+
+  @override
+  String get notificationErrorConflict =>
+      'The server does not allow this retry. Refresh and review the request.';
+
+  @override
+  String get notificationErrorStorage =>
+      'Could not save on the device. No new push has been confirmed.';
+
+  @override
+  String get notificationErrorGeneric =>
+      'The notification operation could not be completed. The routine is unchanged.';
+
+  @override
+  String get pushDeviceTitle => 'Receive notifications on this device';
+
+  @override
+  String get pushEnable => 'Enable notifications';
+
+  @override
+  String get pushDisable => 'Disable on this device';
+
+  @override
+  String get pushDisabled =>
+      'Disabled. You can still use your routines offline.';
+
+  @override
+  String get pushRegistered => 'Device registered for this account.';
+
+  @override
+  String get pushRegistering => 'Registering device…';
+
+  @override
+  String get pushWaiting =>
+      'Permission granted. Registration pending; it will retry when connected.';
+
+  @override
+  String get pushDenied =>
+      'Permission denied. Enable it in device settings and check again.';
+
+  @override
+  String get pushUnsupported =>
+      'Push notifications are available on Android and iOS.';
+
+  @override
+  String get pushReceived =>
+      'A routine has been updated. Open it to verify your access.';
+
+  @override
+  String get pushOpenRoutine => 'Open routine';
+
+  @override
+  String get pushVerifying => 'Checking access to the routine on the server…';
+
+  @override
+  String get pushAccessUnavailable =>
+      'Access could not be verified. Connect and try again. Your downloaded routines remain available from Home.';
+
+  @override
+  String routineAssignmentPartial(int count) {
+    return 'Confirmed routines: $count. You can retry pending assignments without repeating completed ones.';
+  }
+
+  @override
+  String offlinePending(int count) {
+    return '$count changes saved on this device, waiting to sync.';
+  }
+
+  @override
+  String get offlineDisconnected =>
+      'Cannot reach the server. Local changes will sync when it reconnects.';
+
+  @override
+  String get offlineSyncing => 'Syncing your routines and workouts…';
+
+  @override
+  String get offlineAuthRequired =>
+      'You can use local data. Sign in again to sync.';
+
+  @override
+  String get offlineConflict =>
+      'The server rejected a change. It is saved locally; review before retrying.';
+
+  @override
+  String get offlineStorageError =>
+      'Could not save on this device. Keep the app open and retry.';
+
+  @override
+  String get offlineRetry => 'Retry';
+
+  @override
+  String get offlineSignIn => 'Sign in';
+
+  @override
+  String get loginGoogleButton => 'Continue with Google';
+
+  @override
+  String get loginLoading => 'Signing in…';
+
+  @override
+  String get loginGoogleLoading => 'Connecting to Google…';
+
+  @override
+  String get authLoadingMessage =>
+      'We are verifying your access. This may take a few moments.';
+
+  @override
+  String get onboardingLoading => 'Creating your account…';
+
+  @override
+  String get onboardingCreateButton => 'Create individual account';
+
+  @override
+  String get sessionRestoring => 'Restoring your session…';
+
+  @override
+  String get loadingData => 'Loading information…';
+
+  @override
+  String get progressRangeTooLong =>
+      'Select at most one year per query; you can select earlier periods covered by your plan.';
+
+  @override
+  String get progressSets => 'Completed sets';
+
+  @override
+  String get progressRepetitions => 'Repetitions';
+
+  @override
+  String get progressWeight => 'Maximum weight (kg)';
+
+  @override
+  String get progressVolume => 'Load volume (kg × reps)';
+
+  @override
+  String get progressSessions => 'Sessions';
+
+  @override
+  String get progressTrainingDays => 'Training days';
+
+  @override
+  String get progressDaily => 'Daily';
+
+  @override
+  String get progressWeekly => 'Weekly';
+
+  @override
+  String get progressMonthly => 'Monthly';
+
+  @override
+  String get progressMetric => 'Metric';
+
+  @override
+  String get progressNoMeasurement => 'No load measurement';
+
+  @override
+  String get progressHistoryDenied =>
+      'Your subscription does not allow access to this period.';
+
+  @override
+  String get progressLoadError =>
+      'We could not load your progress. Please try again.';
+
+  @override
+  String get progressRetry => 'Retry';
+
+  @override
+  String get progressEmpty =>
+      'There are no completed sessions in this period yet.';
+
+  @override
+  String get progressLegacyWarning =>
+      'Some sessions have no recorded sets. They count toward frequency, but their weight and repetitions cannot be recovered.';
+
+  @override
+  String get progressDetails => 'View values by period';
+
+  @override
+  String get progressUnlimited =>
+      'Your plan has unlimited history. Query up to one year at a time.';
+
+  @override
+  String progressHistoryMonths(int months) {
+    return 'Your plan includes the last $months months of history.';
+  }
+
+  @override
+  String get progressMetricHelp =>
+      'Includes sets marked complete in completed sessions. Volume sums kg × repetitions with a recorded load. Weeks start on Monday; the device\'s current time zone offset is used.';
+
+  @override
+  String get progressInvalidSet =>
+      'Enter repetitions greater than zero and a valid weight (kg). Leave weight blank if not applicable.';
+
+  @override
+  String get progressSaveError =>
+      'Could not save on this device. Retry before leaving.';
+
+  @override
+  String get progressSaving => 'Saving on this device…';
+
+  @override
   String get appTitle => 'FitCoach';
 
   @override
@@ -498,6 +865,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get completeSetAction => 'Mark set as finished';
+
+  @override
+  String get setCompletedStatus => 'Set finished';
+
+  @override
   String get completeAndContinue => 'Complete and continue';
 
   @override
@@ -519,6 +892,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get workoutCompletedDescription =>
       'Great work. You can return to the exercise list.';
+
+  @override
+  String get workoutSessionEmpty =>
+      'This session does not contain exercises yet.';
+
+  @override
+  String get workoutDayFallback => 'Workout day';
+
+  @override
+  String exerciseForceMetadata(Object value) {
+    return 'Type: $value';
+  }
+
+  @override
+  String exerciseLevelMetadata(Object value) {
+    return 'Level: $value';
+  }
+
+  @override
+  String exerciseMechanicMetadata(Object value) {
+    return 'Mechanic: $value';
+  }
+
+  @override
+  String exerciseEquipmentMetadata(Object value) {
+    return 'Equipment: $value';
+  }
+
+  @override
+  String exerciseCategoryMetadata(Object value) {
+    return 'Category: $value';
+  }
+
+  @override
+  String exercisePrimaryMusclesMetadata(Object value) {
+    return 'Muscles: $value';
+  }
+
+  @override
+  String exerciseSecondaryMusclesMetadata(Object value) {
+    return 'Secondary: $value';
+  }
+
+  @override
+  String get pauseSessionAction => 'Pause session';
+
+  @override
+  String get finishWorkoutAction => 'Finish workout';
+
+  @override
+  String sessionActionsIncomplete(Object completed, Object total) {
+    return '$completed of $total exercises completed. Complete all exercises to finish.';
+  }
+
+  @override
+  String get sessionActionsReady =>
+      'All exercises are complete. You can finish now.';
+
+  @override
+  String get finishWorkoutConfirmationTitle => 'Finish this workout?';
+
+  @override
+  String get finishWorkoutConfirmationDescription =>
+      'The session will be marked as completed and you will not be able to record more sets.';
 
   @override
   String get nextLabel => 'Next:';

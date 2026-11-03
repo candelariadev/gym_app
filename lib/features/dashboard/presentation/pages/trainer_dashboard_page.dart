@@ -16,6 +16,7 @@ class TrainerDashboardPage extends StatefulWidget {
     required this.onCreateRoutine,
     required this.onOpenExerciseCatalog,
     this.onOpenPlans,
+    this.onOpenNotifications,
   });
 
   final AuthSession session;
@@ -25,6 +26,7 @@ class TrainerDashboardPage extends StatefulWidget {
   final VoidCallback onCreateRoutine;
   final VoidCallback onOpenExerciseCatalog;
   final VoidCallback? onOpenPlans;
+  final VoidCallback? onOpenNotifications;
 
   @override
   State<TrainerDashboardPage> createState() => _TrainerDashboardPageState();
@@ -79,6 +81,13 @@ class _TrainerDashboardPageState extends State<TrainerDashboardPage> {
               ),
             ],
             content: [
+              if (widget.onOpenNotifications != null)
+                DashboardActionTile(
+                  title: l10n.notificationsTitle,
+                  subtitle: l10n.notificationsDescription,
+                  icon: Icons.notifications_outlined,
+                  onTap: widget.onOpenNotifications!,
+                ),
               DashboardActionTile(
                 title: l10n.trainerClientsAction,
                 subtitle: l10n.trainerClientsActionDescription,

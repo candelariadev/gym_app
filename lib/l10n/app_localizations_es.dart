@@ -9,6 +9,375 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get routineAssignmentInvalid =>
+      'Revisa los días, ejercicios y valores de la rutina.';
+
+  @override
+  String get routineAssignmentAuth =>
+      'Tu sesión expiró. Inicia sesión nuevamente.';
+
+  @override
+  String get routineAssignmentForbidden =>
+      'No tienes permisos para asignar esta rutina.';
+
+  @override
+  String get routineAssignmentConflict =>
+      'La rutina cambió o ya existe. Actualiza e intenta de nuevo.';
+
+  @override
+  String get routineAssignmentQuota =>
+      'Alcanzaste el límite de rutinas de tu plan.';
+
+  @override
+  String get routineAssignmentNetwork =>
+      'No fue posible conectar con el servicio. Intenta nuevamente.';
+
+  @override
+  String get routineAssignmentError => 'No fue posible asignar la rutina.';
+
+  @override
+  String get routineAssignmentMissing =>
+      'Primero crea una rutina para poder asignarla.';
+
+  @override
+  String get routineAssignmentNoClients =>
+      'No hay clientes activos para asignar.';
+
+  @override
+  String routineTrainingDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count días de entrenamiento',
+      one: '1 día de entrenamiento',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pushRemovalPending =>
+      'Desactivación pendiente en el servidor. Se reintentará al recuperar conexión con esta cuenta.';
+
+  @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get notificationsDescription =>
+      'Permisos del dispositivo y estado de solicitudes';
+
+  @override
+  String get notificationQuotaTitle => 'Cuota de notificaciones';
+
+  @override
+  String get notificationQuotaLoading => 'Consultando cuota…';
+
+  @override
+  String get notificationQuotaUnavailable =>
+      'No se pudo comprobar la cuota. Actualiza antes de confirmar.';
+
+  @override
+  String get notificationQuotaDisabled =>
+      'Las notificaciones no están habilitadas en este plan.';
+
+  @override
+  String get notificationQuotaUnlimited =>
+      'Notificaciones sin límite. El servidor revalidará los permisos.';
+
+  @override
+  String notificationQuotaRemaining(int remaining, int reserved) {
+    return 'Disponibles: $remaining. Reservadas: $reserved.';
+  }
+
+  @override
+  String get notificationQuotaStale =>
+      'Cuota guardada, sin comprobar ahora. Se revalidará al recuperar conexión.';
+
+  @override
+  String notificationQuotaReset(String date) {
+    return 'Reinicio de cuota: $date UTC';
+  }
+
+  @override
+  String get notificationQuotaExhausted =>
+      'No quedan notificaciones disponibles en este período.';
+
+  @override
+  String get notificationRefresh => 'Actualizar estado y cuota';
+
+  @override
+  String get notificationNotifyClient => 'Notificar al cliente';
+
+  @override
+  String get notificationConfirmTitle => '¿Notificar al cliente?';
+
+  @override
+  String get notificationConfirmBody =>
+      'La rutina ya está confirmada en el servidor. Si no hay conexión, guardaremos tu decisión para enviarla cuando vuelva, revalidando permisos y cuota.';
+
+  @override
+  String get notificationConfirm => 'Confirmar notificación';
+
+  @override
+  String get notificationCancel => 'Ahora no';
+
+  @override
+  String get notificationReady =>
+      'Rutina confirmada en el servidor. No se ha solicitado una notificación.';
+
+  @override
+  String get notificationQueued =>
+      'Decisión guardada en este dispositivo; esperando confirmación del servidor.';
+
+  @override
+  String get notificationPending =>
+      'Solicitud aceptada por GymSAS; envío pendiente.';
+
+  @override
+  String get notificationProcessing => 'El servidor está procesando el envío.';
+
+  @override
+  String get notificationAccepted =>
+      'Aceptada por el proveedor push. No confirma entrega ni lectura.';
+
+  @override
+  String get notificationFailed =>
+      'El envío falló definitivamente. La rutina sigue disponible.';
+
+  @override
+  String get notificationUncertain =>
+      'Resultado incierto. La cuota sigue reservada; no se repetirá automáticamente.';
+
+  @override
+  String get notificationNoDevices =>
+      'El cliente no tiene dispositivos registrados para recibir notificaciones.';
+
+  @override
+  String get notificationRetry => 'Reintentar la misma solicitud';
+
+  @override
+  String get notificationRiskTitle => 'El cliente podría recibir un duplicado';
+
+  @override
+  String get notificationRiskBody =>
+      'El proveedor pudo aceptar el envío anterior. Este reintento requiere tu confirmación y conservará la misma solicitud y cuota.';
+
+  @override
+  String get notificationHistoryEmpty =>
+      'Aquí aparecerán las rutinas confirmadas y sus notificaciones.';
+
+  @override
+  String get notificationErrorNetwork =>
+      'Sin conexión con el servicio. La decisión permanece guardada.';
+
+  @override
+  String get notificationErrorAuth =>
+      'Inicia sesión nuevamente para enviar o consultar notificaciones.';
+
+  @override
+  String get notificationErrorForbidden =>
+      'No tienes acceso a esta solicitud o la suscripción no está activa.';
+
+  @override
+  String get notificationErrorConflict =>
+      'El servidor no permite este reintento. Actualiza el estado y revisa la solicitud.';
+
+  @override
+  String get notificationErrorStorage =>
+      'No se pudo guardar en el dispositivo. No se ha confirmado un nuevo envío.';
+
+  @override
+  String get notificationErrorGeneric =>
+      'No se pudo completar la operación de notificación. La rutina no se modifica.';
+
+  @override
+  String get pushDeviceTitle => 'Recibir notificaciones en este dispositivo';
+
+  @override
+  String get pushEnable => 'Activar notificaciones';
+
+  @override
+  String get pushDisable => 'Desactivar en este dispositivo';
+
+  @override
+  String get pushDisabled =>
+      'Desactivadas. Puedes seguir usando tus rutinas sin conexión.';
+
+  @override
+  String get pushRegistered => 'Dispositivo registrado para esta cuenta.';
+
+  @override
+  String get pushRegistering => 'Registrando el dispositivo…';
+
+  @override
+  String get pushWaiting =>
+      'Permiso concedido. Registro pendiente; se reintentará al recuperar conexión.';
+
+  @override
+  String get pushDenied =>
+      'Permiso denegado. Actívalo en los ajustes del dispositivo y vuelve a comprobar.';
+
+  @override
+  String get pushUnsupported =>
+      'Las notificaciones push están disponibles en Android y iOS.';
+
+  @override
+  String get pushReceived =>
+      'Hay una actualización de una rutina. Abre para comprobar tu acceso.';
+
+  @override
+  String get pushOpenRoutine => 'Abrir rutina';
+
+  @override
+  String get pushVerifying => 'Comprobando acceso a la rutina en el servidor…';
+
+  @override
+  String get pushAccessUnavailable =>
+      'No se pudo comprobar tu acceso. Conéctate y vuelve a intentarlo. Tus rutinas descargadas siguen disponibles desde Inicio.';
+
+  @override
+  String routineAssignmentPartial(int count) {
+    return 'Rutinas confirmadas: $count. Puedes reintentar las asignaciones pendientes sin repetir las completadas.';
+  }
+
+  @override
+  String offlinePending(int count) {
+    return '$count cambios guardados en este dispositivo, pendientes de sincronizar.';
+  }
+
+  @override
+  String get offlineDisconnected =>
+      'Sin conexión con el servidor. Los cambios locales se enviarán al reconectar.';
+
+  @override
+  String get offlineSyncing => 'Sincronizando tus rutinas y entrenamientos…';
+
+  @override
+  String get offlineAuthRequired =>
+      'Puedes usar tus datos locales. Inicia sesión de nuevo para sincronizar.';
+
+  @override
+  String get offlineConflict =>
+      'El servidor rechazó un cambio. Se conservó localmente; revisa antes de reintentar.';
+
+  @override
+  String get offlineStorageError =>
+      'No se pudo guardar en este dispositivo. No cierres la app; reintenta.';
+
+  @override
+  String get offlineRetry => 'Reintentar';
+
+  @override
+  String get offlineSignIn => 'Ingresar';
+
+  @override
+  String get loginGoogleButton => 'Continuar con Google';
+
+  @override
+  String get loginLoading => 'Iniciando sesión…';
+
+  @override
+  String get loginGoogleLoading => 'Conectando con Google…';
+
+  @override
+  String get authLoadingMessage =>
+      'Estamos verificando tu acceso. Esto puede tardar unos momentos.';
+
+  @override
+  String get onboardingLoading => 'Creando tu cuenta…';
+
+  @override
+  String get onboardingCreateButton => 'Crear cuenta individual';
+
+  @override
+  String get sessionRestoring => 'Recuperando tu sesión…';
+
+  @override
+  String get loadingData => 'Cargando información…';
+
+  @override
+  String get progressRangeTooLong =>
+      'Selecciona como máximo un año por consulta; puedes consultar periodos anteriores dentro de tu plan.';
+
+  @override
+  String get progressSets => 'Series completadas';
+
+  @override
+  String get progressRepetitions => 'Repeticiones';
+
+  @override
+  String get progressWeight => 'Peso máximo (kg)';
+
+  @override
+  String get progressVolume => 'Volumen de carga (kg × reps)';
+
+  @override
+  String get progressSessions => 'Sesiones';
+
+  @override
+  String get progressTrainingDays => 'Días de entrenamiento';
+
+  @override
+  String get progressDaily => 'Diario';
+
+  @override
+  String get progressWeekly => 'Semanal';
+
+  @override
+  String get progressMonthly => 'Mensual';
+
+  @override
+  String get progressMetric => 'Métrica';
+
+  @override
+  String get progressNoMeasurement => 'Sin medición de carga';
+
+  @override
+  String get progressHistoryDenied =>
+      'Tu suscripción no permite consultar este periodo.';
+
+  @override
+  String get progressLoadError =>
+      'No pudimos cargar tu progreso. Intenta de nuevo.';
+
+  @override
+  String get progressRetry => 'Reintentar';
+
+  @override
+  String get progressEmpty =>
+      'Aún no hay sesiones completadas en este periodo.';
+
+  @override
+  String get progressLegacyWarning =>
+      'Hay sesiones sin series registradas. Cuentan para frecuencia, pero su peso y repeticiones no se pueden recuperar.';
+
+  @override
+  String get progressDetails => 'Ver valores por periodo';
+
+  @override
+  String get progressUnlimited =>
+      'Historial sin límite por plan. Consulta hasta un año a la vez.';
+
+  @override
+  String progressHistoryMonths(int months) {
+    return 'Tu plan permite consultar los últimos $months meses.';
+  }
+
+  @override
+  String get progressMetricHelp =>
+      'Se incluyen series marcadas como terminadas de sesiones completadas. El volumen suma kg × repeticiones con carga registrada. La semana inicia el lunes; se usa el huso horario actual del dispositivo.';
+
+  @override
+  String get progressInvalidSet =>
+      'Ingresa repeticiones mayores a cero y un peso válido (kg). Deja el peso vacío si no aplica.';
+
+  @override
+  String get progressSaveError =>
+      'No se pudo guardar en este dispositivo. Reintenta antes de salir.';
+
+  @override
+  String get progressSaving => 'Guardando en este dispositivo…';
+
+  @override
   String get appTitle => 'FitCoach';
 
   @override
@@ -506,6 +875,12 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get completeSetAction => 'Marcar serie como terminada';
+
+  @override
+  String get setCompletedStatus => 'Serie terminada';
+
+  @override
   String get completeAndContinue => 'Completar y seguir';
 
   @override
@@ -527,6 +902,70 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get workoutCompletedDescription =>
       'Buen trabajo. Puedes volver al listado de ejercicios.';
+
+  @override
+  String get workoutSessionEmpty =>
+      'Esta sesión todavía no contiene ejercicios.';
+
+  @override
+  String get workoutDayFallback => 'Día de entrenamiento';
+
+  @override
+  String exerciseForceMetadata(Object value) {
+    return 'Tipo: $value';
+  }
+
+  @override
+  String exerciseLevelMetadata(Object value) {
+    return 'Nivel: $value';
+  }
+
+  @override
+  String exerciseMechanicMetadata(Object value) {
+    return 'Mecánica: $value';
+  }
+
+  @override
+  String exerciseEquipmentMetadata(Object value) {
+    return 'Equipo: $value';
+  }
+
+  @override
+  String exerciseCategoryMetadata(Object value) {
+    return 'Categoría: $value';
+  }
+
+  @override
+  String exercisePrimaryMusclesMetadata(Object value) {
+    return 'Músculos: $value';
+  }
+
+  @override
+  String exerciseSecondaryMusclesMetadata(Object value) {
+    return 'Secundarios: $value';
+  }
+
+  @override
+  String get pauseSessionAction => 'Pausar sesión';
+
+  @override
+  String get finishWorkoutAction => 'Finalizar rutina';
+
+  @override
+  String sessionActionsIncomplete(Object completed, Object total) {
+    return '$completed de $total ejercicios completados. Completa todos para finalizar.';
+  }
+
+  @override
+  String get sessionActionsReady =>
+      'Todos los ejercicios están completos. Ya puedes finalizar.';
+
+  @override
+  String get finishWorkoutConfirmationTitle => '¿Finalizar esta rutina?';
+
+  @override
+  String get finishWorkoutConfirmationDescription =>
+      'La sesión se marcará como completada y ya no podrás registrar más series.';
 
   @override
   String get nextLabel => 'Siguiente:';

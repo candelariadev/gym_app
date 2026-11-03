@@ -20,8 +20,8 @@ MERCADO_PAGO_PUBLIC_KEY=TEST-tu-public-key
 El backend conserva las credenciales privadas:
 
 ```dotenv
-MERCADO_PAGO_ACCESS_TOKEN=TEST-tu-access-token
-MERCADO_PAGO_WEBHOOK_SECRET=tu-secreto-de-webhook
+MERCADO_PAGO_ACCESS_TOKEN=
+MERCADO_PAGO_WEBHOOK_SECRET=
 ```
 
 Configura en Mercado Pago una URL pública HTTPS:

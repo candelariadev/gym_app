@@ -33,6 +33,16 @@ void main() {
 
     store.dispose();
   });
+
+  test('solo permite finalizar cuando todos los ejercicios se completan', () {
+    final store = WorkoutSessionStore(initialSession: _session());
+
+    expect(store.areAllExercisesCompleted, isFalse);
+    store.completeExercise(0);
+    expect(store.areAllExercisesCompleted, isTrue);
+
+    store.dispose();
+  });
 }
 
 WorkoutSessionData _session({

@@ -50,6 +50,7 @@ class WorkoutGraphQlDataSource {
           plannedSets
           plannedReps
           plannedRestSeconds
+          sets { setNumber weightKg reps restSeconds durationSeconds completed }
         }
       }
     }
@@ -73,6 +74,7 @@ class WorkoutGraphQlDataSource {
           plannedSets
           plannedReps
           plannedRestSeconds
+          sets { setNumber weightKg reps restSeconds durationSeconds completed }
         }
       }
     }
@@ -96,8 +98,8 @@ class WorkoutGraphQlDataSource {
   ''';
 
   static const _finishSessionDocument = r'''
-    mutation FinishWorkoutSession($sessionId: ID!) {
-      finishWorkoutSession(sessionId: $sessionId) {
+    mutation FinishWorkoutSession($sessionId: ID!, $completedAt: String) {
+      finishWorkoutSession(sessionId: $sessionId, completedAt: $completedAt) {
         id
         ownerId
         routineId
@@ -154,9 +156,7 @@ class WorkoutGraphQlDataSource {
     if (raw is! List) {
       throw const FormatException('myWorkouts');
     }
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .toList(growable: false);
+    return raw.whereType<Map<String, dynamic>>().toList(growable: false);
   }
 
   Future<List<Map<String, dynamic>>> sessions({
@@ -172,9 +172,7 @@ class WorkoutGraphQlDataSource {
     if (raw is! List) {
       throw const FormatException('myWorkoutSessions');
     }
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .toList(growable: false);
+    return raw.whereType<Map<String, dynamic>>().toList(growable: false);
   }
 
   Future<Map<String, dynamic>> startSession({
@@ -210,13 +208,18 @@ class WorkoutGraphQlDataSource {
   }
 
   Future<Map<String, dynamic>> finishSession({
+    DateTime? completedAt,
     required String sessionId,
     required String accessToken,
   }) async {
     final data = await _client.execute(
       document: _finishSessionDocument,
       accessToken: accessToken,
-      variables: {'sessionId': sessionId},
+      variables: {
+        'sessionId': sessionId,
+        if (completedAt != null)
+          'completedAt': completedAt.toUtc().toIso8601String(),
+      },
     );
     final raw = data['finishWorkoutSession'];
     if (raw is! Map<String, dynamic>) {
@@ -252,6 +255,10 @@ class WorkoutGraphQlDataSource {
   };
 
   Map<String, dynamic> _startInput(StartWorkoutSessionCommand command) => {
+    if (command.clientRequestId != null)
+      'clientRequestId': command.clientRequestId,
+    if (command.startedAt != null)
+      'startedAt': command.startedAt!.toUtc().toIso8601String(),
     'routineId': command.routineId,
     'scheduledDay': command.scheduledDay,
     'userId': command.userId,

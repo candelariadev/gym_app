@@ -100,3 +100,24 @@ app.*.map.json
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
+
+# Local environments, exports and credentials
+**/environments/
+**/env/
+**/config.local.*
+**/services_account/
+**/credentials.json
+**/.aws/
+**/.ssh/
+**/.npmrc
+**/.pypirc
+**/.netrc
+**/*.pfx
+**/*.dump
+**/*.sql
+**/*.bson
+**/*.bak
+**/*.backup
+**/*.zip
+**/__pycache__/
+**/node_modules/

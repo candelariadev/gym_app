@@ -6,25 +6,31 @@ class WorkoutExerciseMetadataResolver {
   WorkoutExerciseMetadataResolver({
     required GetExercisesUseCase getExercisesUseCase,
     String? exerciseImageBaseUrl,
-  })  : _getExercisesUseCase = getExercisesUseCase,
-        _exerciseImageBaseUrl = _normalizeImageBaseUrl(exerciseImageBaseUrl);
+  }) : _getExercisesUseCase = getExercisesUseCase,
+       _exerciseImageBaseUrl = _normalizeImageBaseUrl(exerciseImageBaseUrl);
 
   final GetExercisesUseCase _getExercisesUseCase;
   final Uri? _exerciseImageBaseUrl;
 
   final Map<String, WorkoutExerciseMetadata> _cache = {};
+  int _generation = 0;
+  void clear() {
+    _generation++;
+    _cache.clear();
+  }
 
-  Future<Map<String, WorkoutExerciseMetadata>> resolve(Set<String> exerciseIds) async {
+  Future<Map<String, WorkoutExerciseMetadata>> resolve(
+    Set<String> exerciseIds,
+  ) async {
     final ids = _normalizeIds(exerciseIds);
     if (ids.isEmpty) {
       return const {};
     }
 
-    final missingIds = ids.where((id) => !_cache.containsKey(id)).toList(growable: false);
-    await Future.wait(
-      missingIds.map(_loadMetadataById),
-      eagerError: false,
-    );
+    final missingIds = ids
+        .where((id) => !_cache.containsKey(id))
+        .toList(growable: false);
+    await Future.wait(missingIds.map(_loadMetadataById), eagerError: false);
 
     final found = <String, WorkoutExerciseMetadata>{};
     for (final id in ids) {
@@ -42,13 +48,10 @@ class WorkoutExerciseMetadataResolver {
       .toSet();
 
   Future<void> _loadMetadataById(String exerciseId) async {
+    final generation = _generation;
     try {
       final query = await _getExercisesUseCase(
-        ExerciseCatalogRequest(
-          search: exerciseId,
-          size: 10,
-          page: 0,
-        ),
+        ExerciseCatalogRequest(search: exerciseId, size: 10, page: 0),
       );
 
       final matches = query.items
@@ -59,6 +62,7 @@ class WorkoutExerciseMetadataResolver {
           )
           .toList(growable: false);
       if (matches.isEmpty) return;
+      if (generation != _generation) return;
 
       final matched = matches.first;
 
@@ -96,9 +100,11 @@ class WorkoutExerciseMetadataResolver {
   }
 
   List<String> _instructions(ExerciseCatalogItem item) {
-    return _nonEmptyValues(item.instructions.resolve('es').isNotEmpty
-        ? item.instructions.resolve('es')
-        : item.instructions.resolve('en'));
+    return _nonEmptyValues(
+      item.instructions.resolve('es').isNotEmpty
+          ? item.instructions.resolve('es')
+          : item.instructions.resolve('en'),
+    );
   }
 
   List<String> _nonEmptyValues(List<String> values) =>
@@ -115,7 +121,8 @@ class WorkoutExerciseMetadataResolver {
     final first = item.images.first.trim();
     if (first.isEmpty) return null;
 
-    final isAbsoluteHttp = first.startsWith('http://') || first.startsWith('https://');
+    final isAbsoluteHttp =
+        first.startsWith('http://') || first.startsWith('https://');
     if (isAbsoluteHttp) {
       return first;
     }
@@ -145,7 +152,9 @@ class WorkoutExerciseMetadataResolver {
     final path = parsed.path;
     if (path.endsWith('/graphql')) {
       final withoutGraphQl = path.substring(0, path.length - '/graphql'.length);
-      return parsed.replace(path: withoutGraphQl.isEmpty ? '/' : withoutGraphQl);
+      return parsed.replace(
+        path: withoutGraphQl.isEmpty ? '/' : withoutGraphQl,
+      );
     }
 
     return parsed;

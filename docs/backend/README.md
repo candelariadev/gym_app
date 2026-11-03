@@ -18,13 +18,13 @@ En `microservicios/.env`, usa valores propios:
 
 ```dotenv
 FIREBASE_PROJECT_ID=gymza-f1837
-FIREBASE_CREDENTIALS_BASE64=service-account-json-codificado-en-base64
-FIREBASE_INTERNAL_API_KEY=secreto-interno-fuerte
-USER_INTERNAL_API_KEY=otro-secreto-interno-fuerte
-TENANT_INTERNAL_API_KEY=otro-secreto-interno-fuerte
+FIREBASE_CREDENTIALS_BASE64=
+FIREBASE_INTERNAL_API_KEY=
+USER_INTERNAL_API_KEY=
+TENANT_INTERNAL_API_KEY=
 
-MERCADO_PAGO_ACCESS_TOKEN=TEST-tu-access-token
-MERCADO_PAGO_WEBHOOK_SECRET=tu-secreto-de-webhook
+MERCADO_PAGO_ACCESS_TOKEN=
+MERCADO_PAGO_WEBHOOK_SECRET=
 ```
 
 No copies estos valores a `lib/.env`.

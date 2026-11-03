@@ -41,10 +41,9 @@ class SecureSessionRepository implements SessionRepository {
         firebaseUid: json['firebaseUid'] as String? ?? claims.firebaseUid,
         plan: json['plan'] as String? ?? claims.plan,
       );
-      if (session.isExpired) {
-        await clear();
-        return null;
-      }
+      // An expired access token cannot authorize the API, but the protected
+      // identity can still open this account's local data. Synchronization
+      // requires reauthentication; logout explicitly clears this identity.
       return session;
     } on Object {
       await clear();

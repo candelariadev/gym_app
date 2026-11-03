@@ -321,7 +321,12 @@ class _WorkoutTodayPageState extends State<WorkoutTodayPage> {
             name: exerciseName,
             focus: focus,
             metadata: metadata,
-            seriesCount: sessionExercise.plannedSets ?? 0,
+            seriesCount: sessionExercise.sets.fold<int>(
+              sessionExercise.plannedSets ?? 0,
+              (count, set) => set.setNumber > count ? set.setNumber : count,
+            ),
+            recordedSets: sessionExercise.sets,
+            isCompleted: sessionExercise.isCompleted,
             repetitionRange: '${sessionExercise.plannedReps ?? 0} reps',
             imageUrl: metadata?.imageUrl,
           ),
@@ -452,7 +457,7 @@ class _WorkoutRoutinesContent extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           if (isLoading && workouts.isEmpty)
-            const Center(child: CircularProgressIndicator())
+            Center(child: GymLoadingStatus(label: l10n.loadingData))
           else if (workouts.isEmpty)
             _EmptyWorkoutState(
               hasError: error != null,

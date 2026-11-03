@@ -55,6 +55,12 @@ dependencies:
     path: packages/gymsas_payments
   gymsas_workouts:
     path: packages/gymsas_workouts
+  gymsas_offline:
+    path: packages/gymsas_offline
+  gymsas_notifications:
+    path: packages/gymsas_notifications
+  gymsas_firebase_messaging:
+    path: packages/gymsas_firebase_messaging
 
 dev_dependencies:
   flutter_test:

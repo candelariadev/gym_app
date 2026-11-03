@@ -298,8 +298,8 @@ Las variables pertenecen a `microservicios/.env`, no a `gym_app/lib/.env`:
 
 ```dotenv
 FIREBASE_PROJECT_ID=gymza-f1837
-FIREBASE_CREDENTIALS_BASE64=service-account-json-codificado-en-base64
-FIREBASE_INTERNAL_API_KEY=secreto-interno-fuerte
+FIREBASE_CREDENTIALS_BASE64=
+FIREBASE_INTERNAL_API_KEY=
 ```
 
 En macOS, si el equipo utiliza el formato Base64:

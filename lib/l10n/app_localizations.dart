@@ -98,6 +98,606 @@ abstract class AppLocalizations {
     Locale('es'),
   ];
 
+  /// No description provided for @routineAssignmentInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa los días, ejercicios y valores de la rutina.'**
+  String get routineAssignmentInvalid;
+
+  /// No description provided for @routineAssignmentAuth.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu sesión expiró. Inicia sesión nuevamente.'**
+  String get routineAssignmentAuth;
+
+  /// No description provided for @routineAssignmentForbidden.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes permisos para asignar esta rutina.'**
+  String get routineAssignmentForbidden;
+
+  /// No description provided for @routineAssignmentConflict.
+  ///
+  /// In es, this message translates to:
+  /// **'La rutina cambió o ya existe. Actualiza e intenta de nuevo.'**
+  String get routineAssignmentConflict;
+
+  /// No description provided for @routineAssignmentQuota.
+  ///
+  /// In es, this message translates to:
+  /// **'Alcanzaste el límite de rutinas de tu plan.'**
+  String get routineAssignmentQuota;
+
+  /// No description provided for @routineAssignmentNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'No fue posible conectar con el servicio. Intenta nuevamente.'**
+  String get routineAssignmentNetwork;
+
+  /// No description provided for @routineAssignmentError.
+  ///
+  /// In es, this message translates to:
+  /// **'No fue posible asignar la rutina.'**
+  String get routineAssignmentError;
+
+  /// No description provided for @routineAssignmentMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Primero crea una rutina para poder asignarla.'**
+  String get routineAssignmentMissing;
+
+  /// No description provided for @routineAssignmentNoClients.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay clientes activos para asignar.'**
+  String get routineAssignmentNoClients;
+
+  /// No description provided for @routineTrainingDays.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1 {1 día de entrenamiento} other {{count} días de entrenamiento}}'**
+  String routineTrainingDays(int count);
+
+  /// No description provided for @pushRemovalPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivación pendiente en el servidor. Se reintentará al recuperar conexión con esta cuenta.'**
+  String get pushRemovalPending;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Permisos del dispositivo y estado de solicitudes'**
+  String get notificationsDescription;
+
+  /// No description provided for @notificationQuotaTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuota de notificaciones'**
+  String get notificationQuotaTitle;
+
+  /// No description provided for @notificationQuotaLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Consultando cuota…'**
+  String get notificationQuotaLoading;
+
+  /// No description provided for @notificationQuotaUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo comprobar la cuota. Actualiza antes de confirmar.'**
+  String get notificationQuotaUnavailable;
+
+  /// No description provided for @notificationQuotaDisabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Las notificaciones no están habilitadas en este plan.'**
+  String get notificationQuotaDisabled;
+
+  /// No description provided for @notificationQuotaUnlimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones sin límite. El servidor revalidará los permisos.'**
+  String get notificationQuotaUnlimited;
+
+  /// No description provided for @notificationQuotaRemaining.
+  ///
+  /// In es, this message translates to:
+  /// **'Disponibles: {remaining}. Reservadas: {reserved}.'**
+  String notificationQuotaRemaining(int remaining, int reserved);
+
+  /// No description provided for @notificationQuotaStale.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuota guardada, sin comprobar ahora. Se revalidará al recuperar conexión.'**
+  String get notificationQuotaStale;
+
+  /// No description provided for @notificationQuotaReset.
+  ///
+  /// In es, this message translates to:
+  /// **'Reinicio de cuota: {date} UTC'**
+  String notificationQuotaReset(String date);
+
+  /// No description provided for @notificationQuotaExhausted.
+  ///
+  /// In es, this message translates to:
+  /// **'No quedan notificaciones disponibles en este período.'**
+  String get notificationQuotaExhausted;
+
+  /// No description provided for @notificationRefresh.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar estado y cuota'**
+  String get notificationRefresh;
+
+  /// No description provided for @notificationNotifyClient.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificar al cliente'**
+  String get notificationNotifyClient;
+
+  /// No description provided for @notificationConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Notificar al cliente?'**
+  String get notificationConfirmTitle;
+
+  /// No description provided for @notificationConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La rutina ya está confirmada en el servidor. Si no hay conexión, guardaremos tu decisión para enviarla cuando vuelva, revalidando permisos y cuota.'**
+  String get notificationConfirmBody;
+
+  /// No description provided for @notificationConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar notificación'**
+  String get notificationConfirm;
+
+  /// No description provided for @notificationCancel.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get notificationCancel;
+
+  /// No description provided for @notificationReady.
+  ///
+  /// In es, this message translates to:
+  /// **'Rutina confirmada en el servidor. No se ha solicitado una notificación.'**
+  String get notificationReady;
+
+  /// No description provided for @notificationQueued.
+  ///
+  /// In es, this message translates to:
+  /// **'Decisión guardada en este dispositivo; esperando confirmación del servidor.'**
+  String get notificationQueued;
+
+  /// No description provided for @notificationPending.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud aceptada por GymSAS; envío pendiente.'**
+  String get notificationPending;
+
+  /// No description provided for @notificationProcessing.
+  ///
+  /// In es, this message translates to:
+  /// **'El servidor está procesando el envío.'**
+  String get notificationProcessing;
+
+  /// No description provided for @notificationAccepted.
+  ///
+  /// In es, this message translates to:
+  /// **'Aceptada por el proveedor push. No confirma entrega ni lectura.'**
+  String get notificationAccepted;
+
+  /// No description provided for @notificationFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'El envío falló definitivamente. La rutina sigue disponible.'**
+  String get notificationFailed;
+
+  /// No description provided for @notificationUncertain.
+  ///
+  /// In es, this message translates to:
+  /// **'Resultado incierto. La cuota sigue reservada; no se repetirá automáticamente.'**
+  String get notificationUncertain;
+
+  /// No description provided for @notificationNoDevices.
+  ///
+  /// In es, this message translates to:
+  /// **'El cliente no tiene dispositivos registrados para recibir notificaciones.'**
+  String get notificationNoDevices;
+
+  /// No description provided for @notificationRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar la misma solicitud'**
+  String get notificationRetry;
+
+  /// No description provided for @notificationRiskTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'El cliente podría recibir un duplicado'**
+  String get notificationRiskTitle;
+
+  /// No description provided for @notificationRiskBody.
+  ///
+  /// In es, this message translates to:
+  /// **'El proveedor pudo aceptar el envío anterior. Este reintento requiere tu confirmación y conservará la misma solicitud y cuota.'**
+  String get notificationRiskBody;
+
+  /// No description provided for @notificationHistoryEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí aparecerán las rutinas confirmadas y sus notificaciones.'**
+  String get notificationHistoryEmpty;
+
+  /// No description provided for @notificationErrorNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión con el servicio. La decisión permanece guardada.'**
+  String get notificationErrorNetwork;
+
+  /// No description provided for @notificationErrorAuth.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicia sesión nuevamente para enviar o consultar notificaciones.'**
+  String get notificationErrorAuth;
+
+  /// No description provided for @notificationErrorForbidden.
+  ///
+  /// In es, this message translates to:
+  /// **'No tienes acceso a esta solicitud o la suscripción no está activa.'**
+  String get notificationErrorForbidden;
+
+  /// No description provided for @notificationErrorConflict.
+  ///
+  /// In es, this message translates to:
+  /// **'El servidor no permite este reintento. Actualiza el estado y revisa la solicitud.'**
+  String get notificationErrorConflict;
+
+  /// No description provided for @notificationErrorStorage.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar en el dispositivo. No se ha confirmado un nuevo envío.'**
+  String get notificationErrorStorage;
+
+  /// No description provided for @notificationErrorGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la operación de notificación. La rutina no se modifica.'**
+  String get notificationErrorGeneric;
+
+  /// No description provided for @pushDeviceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibir notificaciones en este dispositivo'**
+  String get pushDeviceTitle;
+
+  /// No description provided for @pushEnable.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar notificaciones'**
+  String get pushEnable;
+
+  /// No description provided for @pushDisable.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivar en este dispositivo'**
+  String get pushDisable;
+
+  /// No description provided for @pushDisabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactivadas. Puedes seguir usando tus rutinas sin conexión.'**
+  String get pushDisabled;
+
+  /// No description provided for @pushRegistered.
+  ///
+  /// In es, this message translates to:
+  /// **'Dispositivo registrado para esta cuenta.'**
+  String get pushRegistered;
+
+  /// No description provided for @pushRegistering.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrando el dispositivo…'**
+  String get pushRegistering;
+
+  /// No description provided for @pushWaiting.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso concedido. Registro pendiente; se reintentará al recuperar conexión.'**
+  String get pushWaiting;
+
+  /// No description provided for @pushDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso denegado. Actívalo en los ajustes del dispositivo y vuelve a comprobar.'**
+  String get pushDenied;
+
+  /// No description provided for @pushUnsupported.
+  ///
+  /// In es, this message translates to:
+  /// **'Las notificaciones push están disponibles en Android y iOS.'**
+  String get pushUnsupported;
+
+  /// No description provided for @pushReceived.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay una actualización de una rutina. Abre para comprobar tu acceso.'**
+  String get pushReceived;
+
+  /// No description provided for @pushOpenRoutine.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir rutina'**
+  String get pushOpenRoutine;
+
+  /// No description provided for @pushVerifying.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprobando acceso a la rutina en el servidor…'**
+  String get pushVerifying;
+
+  /// No description provided for @pushAccessUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo comprobar tu acceso. Conéctate y vuelve a intentarlo. Tus rutinas descargadas siguen disponibles desde Inicio.'**
+  String get pushAccessUnavailable;
+
+  /// No description provided for @routineAssignmentPartial.
+  ///
+  /// In es, this message translates to:
+  /// **'Rutinas confirmadas: {count}. Puedes reintentar las asignaciones pendientes sin repetir las completadas.'**
+  String routineAssignmentPartial(int count);
+
+  /// No description provided for @offlinePending.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} cambios guardados en este dispositivo, pendientes de sincronizar.'**
+  String offlinePending(int count);
+
+  /// No description provided for @offlineDisconnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión con el servidor. Los cambios locales se enviarán al reconectar.'**
+  String get offlineDisconnected;
+
+  /// No description provided for @offlineSyncing.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronizando tus rutinas y entrenamientos…'**
+  String get offlineSyncing;
+
+  /// No description provided for @offlineAuthRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes usar tus datos locales. Inicia sesión de nuevo para sincronizar.'**
+  String get offlineAuthRequired;
+
+  /// No description provided for @offlineConflict.
+  ///
+  /// In es, this message translates to:
+  /// **'El servidor rechazó un cambio. Se conservó localmente; revisa antes de reintentar.'**
+  String get offlineConflict;
+
+  /// No description provided for @offlineStorageError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar en este dispositivo. No cierres la app; reintenta.'**
+  String get offlineStorageError;
+
+  /// No description provided for @offlineRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get offlineRetry;
+
+  /// No description provided for @offlineSignIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresar'**
+  String get offlineSignIn;
+
+  /// No description provided for @loginGoogleButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar con Google'**
+  String get loginGoogleButton;
+
+  /// No description provided for @loginLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciando sesión…'**
+  String get loginLoading;
+
+  /// No description provided for @loginGoogleLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectando con Google…'**
+  String get loginGoogleLoading;
+
+  /// No description provided for @authLoadingMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Estamos verificando tu acceso. Esto puede tardar unos momentos.'**
+  String get authLoadingMessage;
+
+  /// No description provided for @onboardingLoading.
+  ///
+  /// In es, this message translates to:
+  /// **'Creando tu cuenta…'**
+  String get onboardingLoading;
+
+  /// No description provided for @onboardingCreateButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta individual'**
+  String get onboardingCreateButton;
+
+  /// No description provided for @sessionRestoring.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperando tu sesión…'**
+  String get sessionRestoring;
+
+  /// No description provided for @loadingData.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargando información…'**
+  String get loadingData;
+
+  /// No description provided for @progressRangeTooLong.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona como máximo un año por consulta; puedes consultar periodos anteriores dentro de tu plan.'**
+  String get progressRangeTooLong;
+
+  /// No description provided for @progressSets.
+  ///
+  /// In es, this message translates to:
+  /// **'Series completadas'**
+  String get progressSets;
+
+  /// No description provided for @progressRepetitions.
+  ///
+  /// In es, this message translates to:
+  /// **'Repeticiones'**
+  String get progressRepetitions;
+
+  /// No description provided for @progressWeight.
+  ///
+  /// In es, this message translates to:
+  /// **'Peso máximo (kg)'**
+  String get progressWeight;
+
+  /// No description provided for @progressVolume.
+  ///
+  /// In es, this message translates to:
+  /// **'Volumen de carga (kg × reps)'**
+  String get progressVolume;
+
+  /// No description provided for @progressSessions.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesiones'**
+  String get progressSessions;
+
+  /// No description provided for @progressTrainingDays.
+  ///
+  /// In es, this message translates to:
+  /// **'Días de entrenamiento'**
+  String get progressTrainingDays;
+
+  /// No description provided for @progressDaily.
+  ///
+  /// In es, this message translates to:
+  /// **'Diario'**
+  String get progressDaily;
+
+  /// No description provided for @progressWeekly.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get progressWeekly;
+
+  /// No description provided for @progressMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get progressMonthly;
+
+  /// No description provided for @progressMetric.
+  ///
+  /// In es, this message translates to:
+  /// **'Métrica'**
+  String get progressMetric;
+
+  /// No description provided for @progressNoMeasurement.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin medición de carga'**
+  String get progressNoMeasurement;
+
+  /// No description provided for @progressHistoryDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu suscripción no permite consultar este periodo.'**
+  String get progressHistoryDenied;
+
+  /// No description provided for @progressLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar tu progreso. Intenta de nuevo.'**
+  String get progressLoadError;
+
+  /// No description provided for @progressRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar'**
+  String get progressRetry;
+
+  /// No description provided for @progressEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay sesiones completadas en este periodo.'**
+  String get progressEmpty;
+
+  /// No description provided for @progressLegacyWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay sesiones sin series registradas. Cuentan para frecuencia, pero su peso y repeticiones no se pueden recuperar.'**
+  String get progressLegacyWarning;
+
+  /// No description provided for @progressDetails.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver valores por periodo'**
+  String get progressDetails;
+
+  /// No description provided for @progressUnlimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial sin límite por plan. Consulta hasta un año a la vez.'**
+  String get progressUnlimited;
+
+  /// No description provided for @progressHistoryMonths.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu plan permite consultar los últimos {months} meses.'**
+  String progressHistoryMonths(int months);
+
+  /// No description provided for @progressMetricHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Se incluyen series marcadas como terminadas de sesiones completadas. El volumen suma kg × repeticiones con carga registrada. La semana inicia el lunes; se usa el huso horario actual del dispositivo.'**
+  String get progressMetricHelp;
+
+  /// No description provided for @progressInvalidSet.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa repeticiones mayores a cero y un peso válido (kg). Deja el peso vacío si no aplica.'**
+  String get progressInvalidSet;
+
+  /// No description provided for @progressSaveError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar en este dispositivo. Reintenta antes de salir.'**
+  String get progressSaveError;
+
+  /// No description provided for @progressSaving.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardando en este dispositivo…'**
+  String get progressSaving;
+
   /// No description provided for @appTitle.
   ///
   /// In es, this message translates to:
@@ -944,6 +1544,18 @@ abstract class AppLocalizations {
   /// **'Serie {number}'**
   String setLabel(Object number);
 
+  /// No description provided for @completeSetAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Marcar serie como terminada'**
+  String get completeSetAction;
+
+  /// No description provided for @setCompletedStatus.
+  ///
+  /// In es, this message translates to:
+  /// **'Serie terminada'**
+  String get setCompletedStatus;
+
   /// No description provided for @completeAndContinue.
   ///
   /// In es, this message translates to:
@@ -985,6 +1597,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Buen trabajo. Puedes volver al listado de ejercicios.'**
   String get workoutCompletedDescription;
+
+  /// No description provided for @workoutSessionEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta sesión todavía no contiene ejercicios.'**
+  String get workoutSessionEmpty;
+
+  /// No description provided for @workoutDayFallback.
+  ///
+  /// In es, this message translates to:
+  /// **'Día de entrenamiento'**
+  String get workoutDayFallback;
+
+  /// No description provided for @exerciseForceMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo: {value}'**
+  String exerciseForceMetadata(Object value);
+
+  /// No description provided for @exerciseLevelMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Nivel: {value}'**
+  String exerciseLevelMetadata(Object value);
+
+  /// No description provided for @exerciseMechanicMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Mecánica: {value}'**
+  String exerciseMechanicMetadata(Object value);
+
+  /// No description provided for @exerciseEquipmentMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Equipo: {value}'**
+  String exerciseEquipmentMetadata(Object value);
+
+  /// No description provided for @exerciseCategoryMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría: {value}'**
+  String exerciseCategoryMetadata(Object value);
+
+  /// No description provided for @exercisePrimaryMusclesMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Músculos: {value}'**
+  String exercisePrimaryMusclesMetadata(Object value);
+
+  /// No description provided for @exerciseSecondaryMusclesMetadata.
+  ///
+  /// In es, this message translates to:
+  /// **'Secundarios: {value}'**
+  String exerciseSecondaryMusclesMetadata(Object value);
+
+  /// No description provided for @pauseSessionAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Pausar sesión'**
+  String get pauseSessionAction;
+
+  /// No description provided for @finishWorkoutAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Finalizar rutina'**
+  String get finishWorkoutAction;
+
+  /// No description provided for @sessionActionsIncomplete.
+  ///
+  /// In es, this message translates to:
+  /// **'{completed} de {total} ejercicios completados. Completa todos para finalizar.'**
+  String sessionActionsIncomplete(Object completed, Object total);
+
+  /// No description provided for @sessionActionsReady.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los ejercicios están completos. Ya puedes finalizar.'**
+  String get sessionActionsReady;
+
+  /// No description provided for @finishWorkoutConfirmationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Finalizar esta rutina?'**
+  String get finishWorkoutConfirmationTitle;
+
+  /// No description provided for @finishWorkoutConfirmationDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'La sesión se marcará como completada y ya no podrás registrar más series.'**
+  String get finishWorkoutConfirmationDescription;
 
   /// No description provided for @nextLabel.
   ///

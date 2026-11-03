@@ -1,18 +1,94 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:gymsas_workouts/gymsas_workouts.dart'
+    show
+        RecordWorkoutPerformance,
+        SessionPerformance,
+        ExercisePerformance,
+        WorkoutSet;
 
 import '../domain/workout_session_data.dart';
 
 class WorkoutSessionStore extends ChangeNotifier {
   static const int restSecondsTotal = 60;
 
-  WorkoutSessionStore({WorkoutSessionData? initialSession})
-    : _initialSession = initialSession ?? WorkoutSessionData.empty() {
+  WorkoutSessionStore({
+    WorkoutSessionData? initialSession,
+    RecordWorkoutPerformance? recordPerformance,
+  }) : _recordPerformance = recordPerformance,
+       _initialSession = initialSession ?? WorkoutSessionData.empty() {
     reset();
   }
 
   final WorkoutSessionData _initialSession;
+  final RecordWorkoutPerformance? _recordPerformance;
+  int _pendingSaves = 0;
+  int _generation = 0;
+  bool saveFailed = false;
+  bool isSaving = false;
+  bool _disposed = false;
+
+  Future<void> flushPerformance() async {
+    final generation = _generation;
+    final record = _recordPerformance;
+    if (record == null || _session.sessionId.isEmpty || !hasExercises) return;
+    final snapshot = SessionPerformance(
+      sessionId: _session.sessionId,
+      exercises: [
+        for (var i = 0; i < _session.exercises.length; i++)
+          if (_session.exercises[i].exerciseId != null)
+            ExercisePerformance(
+              exerciseId: _session.exercises[i].exerciseId!,
+              completed: _completedExercises[i],
+              sets: [
+                for (var j = 0; j < _seriesByExercise[i].length; j++)
+                  WorkoutSet(
+                    setNumber: j + 1,
+                    weightKg: _weightsByExercise[i][j],
+                    reps: _repsByExercise[i][j],
+                    restSeconds: _recordedSet(i, j + 1)?.restSeconds,
+                    durationSeconds: _recordedSet(i, j + 1)?.durationSeconds,
+                    completed: _seriesByExercise[i][j],
+                  ),
+              ],
+            ),
+      ],
+    );
+    isSaving = true;
+    _pendingSaves++;
+    if (!_disposed) notifyListeners();
+    // Invoke now so the repository captures the current account before awaits.
+    // Its durable transaction serializes snapshots and coalesces the outbox.
+    final next = record(snapshot);
+    try {
+      await next;
+      if (generation == _generation) saveFailed = false;
+    } on Object {
+      if (generation == _generation) saveFailed = true;
+      rethrow;
+    } finally {
+      if (generation == _generation) {
+        _pendingSaves--;
+        isSaving = _pendingSaves > 0;
+        if (!_disposed) notifyListeners();
+      }
+    }
+  }
+
+  void _scheduleSave() {
+    if (_recordPerformance == null) return;
+    // Never debounce durable writes: an app termination must not discard the
+    // last edit during a timer window. Remote replay is handled separately.
+    unawaited(flushPerformance().catchError((Object _) {}));
+  }
+
+  WorkoutSet? _recordedSet(int exerciseIndex, int number) {
+    for (final set in _session.exercises[exerciseIndex].recordedSets) {
+      if (set.setNumber == number) return set;
+    }
+    return null;
+  }
 
   late WorkoutSessionData _session;
   late List<bool> _completedExercises;
@@ -32,8 +108,14 @@ class WorkoutSessionStore extends ChangeNotifier {
   int? get activeExerciseIndex => _activeExerciseIndex;
   bool get hasExercises => _session.exercises.isNotEmpty;
   bool get hasProgress => _session.totalExercises > 0;
+  bool get areAllExercisesCompleted =>
+      hasExercises && completedExercisesCount == _session.totalExercises;
 
   void reset() {
+    _generation++;
+    _pendingSaves = 0;
+    isSaving = false;
+    saveFailed = false;
     _restTimer?.cancel();
     _sessionTimer?.cancel();
     _remainingRestSeconds = 0;
@@ -45,6 +127,10 @@ class WorkoutSessionStore extends ChangeNotifier {
   }
 
   void replaceSession(WorkoutSessionData nextSession) {
+    _generation++;
+    _pendingSaves = 0;
+    isSaving = false;
+    saveFailed = false;
     _restTimer?.cancel();
     _sessionTimer?.cancel();
     _remainingRestSeconds = 0;
@@ -101,6 +187,19 @@ class WorkoutSessionStore extends ChangeNotifier {
         .map((exercise) => List<int?>.filled(exercise.seriesCount, null))
         .toList(growable: false);
     _activeExerciseIndex = _session.exercises.isEmpty ? null : 0;
+    for (var i = 0; i < _session.exercises.length; i++) {
+      for (final set in _session.exercises[i].recordedSets) {
+        final j = set.setNumber - 1;
+        if (j < 0 || j >= _seriesByExercise[i].length) continue;
+        _seriesByExercise[i][j] = set.completed;
+        _weightsByExercise[i][j] = set.weightKg;
+        _repsByExercise[i][j] = set.reps;
+      }
+      if (_seriesByExercise[i].isNotEmpty &&
+          _seriesByExercise[i].every((done) => done)) {
+        _completedExercises[i] = true;
+      }
+    }
   }
 
   bool isExerciseCompleted(int exerciseIndex) {
@@ -152,6 +251,10 @@ class WorkoutSessionStore extends ChangeNotifier {
     }
     _seriesByExercise[exerciseIndex][seriesIndex] =
         !_seriesByExercise[exerciseIndex][seriesIndex];
+    if (!_seriesByExercise[exerciseIndex][seriesIndex]) {
+      _completedExercises[exerciseIndex] = false;
+    }
+    _scheduleSave();
     notifyListeners();
   }
 
@@ -168,6 +271,7 @@ class WorkoutSessionStore extends ChangeNotifier {
     _weightsByExercise[exerciseIndex][seriesIndex] = value.isEmpty
         ? null
         : double.tryParse(value.replaceAll(',', '.'));
+    _scheduleSave();
     notifyListeners();
   }
 
@@ -188,6 +292,7 @@ class WorkoutSessionStore extends ChangeNotifier {
     _repsByExercise[exerciseIndex][seriesIndex] = value.isEmpty
         ? null
         : int.tryParse(value);
+    _scheduleSave();
     notifyListeners();
   }
 
@@ -257,6 +362,7 @@ class WorkoutSessionStore extends ChangeNotifier {
       return;
     }
     _completedExercises[exerciseIndex] = true;
+    _scheduleSave();
     if (_activeExerciseIndex == exerciseIndex) {
       _activeExerciseIndex = null;
     }
@@ -284,6 +390,7 @@ class WorkoutSessionStore extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _restTimer?.cancel();
     _sessionTimer?.cancel();
     super.dispose();

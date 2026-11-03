@@ -54,7 +54,7 @@ class _MyTrainersPageState extends State<MyTrainersPage> {
 
   Widget _body(AppLocalizations l10n) {
     if (_controller.isLoading && _controller.trainers.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: GymLoadingStatus(label: l10n.loadingData));
     }
 
     final error = _controller.errorCode;

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:gymsas_workouts/gymsas_workouts.dart';
 
 import 'workout_exercise_metadata_resolver.dart';
@@ -38,7 +39,8 @@ class AdvisedWorkoutItem {
   bool get isInProgress =>
       activeSession?.status == WorkoutSessionStatus.inProgress.value;
 
-  bool get isPaused => activeSession?.status == WorkoutSessionStatus.paused.value;
+  bool get isPaused =>
+      activeSession?.status == WorkoutSessionStatus.paused.value;
 
   static bool _isActiveStatus(String rawStatus) {
     return rawStatus == WorkoutSessionStatus.inProgress.value ||
@@ -55,13 +57,13 @@ class MyWorkoutsController extends ChangeNotifier {
     required FinishWorkoutSessionUseCase finishWorkoutSession,
     required WorkoutExerciseMetadataResolver exerciseMetadataResolver,
     DateTime Function()? nowProvider,
-  })  : _getMyWorkouts = getMyWorkouts,
-        _getMyWorkoutSessions = getMyWorkoutSessions,
-        _startWorkoutSession = startWorkoutSession,
-        _pauseWorkoutSession = pauseWorkoutSession,
-        _finishWorkoutSession = finishWorkoutSession,
-        _exerciseMetadataResolver = exerciseMetadataResolver,
-        _nowProvider = nowProvider ?? DateTime.now;
+  }) : _getMyWorkouts = getMyWorkouts,
+       _getMyWorkoutSessions = getMyWorkoutSessions,
+       _startWorkoutSession = startWorkoutSession,
+       _pauseWorkoutSession = pauseWorkoutSession,
+       _finishWorkoutSession = finishWorkoutSession,
+       _exerciseMetadataResolver = exerciseMetadataResolver,
+       _nowProvider = nowProvider ?? DateTime.now;
 
   final GetMyWorkoutsUseCase _getMyWorkouts;
   final GetMyWorkoutSessionsUseCase _getMyWorkoutSessions;
@@ -83,11 +85,29 @@ class MyWorkoutsController extends ChangeNotifier {
   Map<String, WorkoutExerciseMetadata> exerciseMetadata = const {};
 
   final Set<String> _busyRoutineIds = <String>{};
+  int _generation = 0;
+  bool _disposed = false;
+
+  void clear() {
+    _generation++;
+    isLoading = false;
+    isActionRunning = false;
+    errorCode = null;
+    workouts = const [];
+    sessions = const [];
+    exerciseMetadata = const {};
+    completedWorkoutsCount = 0;
+    completedWorkoutDays = const [];
+    _busyRoutineIds.clear();
+    _exerciseMetadataResolver.clear();
+    _notify();
+  }
 
   bool isRoutineBusy(String routineId) => _busyRoutineIds.contains(routineId);
 
   Future<void> load() async {
     if (isLoading) return;
+    final generation = _generation;
     final now = _nowProvider();
 
     isLoading = true;
@@ -99,26 +119,35 @@ class MyWorkoutsController extends ChangeNotifier {
         _getMyWorkouts(activeOnly: false),
         _getMyWorkoutSessions(activeOnly: false),
       ]);
+      if (_disposed || generation != _generation) return;
       final workouts = results[0] as List<Workout>;
       final sessions = results[1] as List<WorkoutSession>;
-      final completedSessions = sessions.where(_isCompletedSession).toList(
-        growable: false,
-      );
-      exerciseMetadata = await _loadExerciseMetadata(workouts: workouts, sessions: sessions);
-
-      this.workouts = _toWorkoutItems(
-        workouts,
-        sessions,
-        now: now,
-      );
+      final completedSessions = sessions
+          .where(_isCompletedSession)
+          .toList(growable: false);
+      this.workouts = _toWorkoutItems(workouts, sessions, now: now);
       this.sessions = sessions;
       completedWorkoutsCount = completedSessions.length;
       completedWorkoutDays = _collectCompletedWorkoutDays(completedSessions);
+      // Metadata/media must not delay opening a cached routine offline.
+      unawaited(
+        _loadExerciseMetadata(workouts: workouts, sessions: sessions)
+            .then((value) {
+              if (!_disposed && generation == _generation) {
+                exerciseMetadata = value;
+                _notify();
+              }
+            })
+            .catchError((Object _) {}),
+      );
     } on Object {
+      if (_disposed || generation != _generation) return;
       errorCode = const WorkoutException(WorkoutErrorCode.unexpected).code;
     } finally {
-      isLoading = false;
-      _notify();
+      if (!_disposed && generation == _generation) {
+        isLoading = false;
+        _notify();
+      }
     }
   }
 
@@ -156,8 +185,7 @@ class MyWorkoutsController extends ChangeNotifier {
   }
 
   Future<WorkoutSession?> startRoutine(
-    AdvisedWorkoutItem item,
-    {
+    AdvisedWorkoutItem item, {
     WorkoutDay? scheduledDay,
   }) async {
     final resolvedDay = scheduledDay ?? item.startDay;
@@ -199,15 +227,21 @@ class MyWorkoutsController extends ChangeNotifier {
 
   Future<bool> pauseRoutine(AdvisedWorkoutItem item) async {
     final session = item.activeSession;
-    if (session == null || session.status != WorkoutSessionStatus.inProgress.value) {
+    if (session == null) return false;
+    return pauseSession(session.id);
+  }
+
+  Future<bool> pauseSession(String sessionId) async {
+    final session = _sessionById(sessionId);
+    if (session == null ||
+        session.status != WorkoutSessionStatus.inProgress.value) {
       return false;
     }
-    final routineId = session.routineId;
-    if (_busyRoutineIds.contains(routineId)) return false;
+    if (_busyRoutineIds.contains(session.routineId)) return false;
 
     return _runSessionAction(
       sessionId: session.id,
-      routineId: routineId,
+      routineId: session.routineId,
       action: () => _pauseWorkoutSession(session.id),
       onSuccess: () => true,
     );
@@ -216,15 +250,30 @@ class MyWorkoutsController extends ChangeNotifier {
   Future<bool> finishRoutine(AdvisedWorkoutItem item) async {
     final session = item.activeSession;
     if (session == null) return false;
-    final routineId = session.routineId;
-    if (_busyRoutineIds.contains(routineId)) return false;
+    return finishSession(session.id);
+  }
+
+  Future<bool> finishSession(String sessionId) async {
+    final session = _sessionById(sessionId);
+    if (session == null || !session.isActive) return false;
+    if (_busyRoutineIds.contains(session.routineId)) return false;
 
     return _runSessionAction(
       sessionId: session.id,
-      routineId: routineId,
+      routineId: session.routineId,
       action: () => _finishWorkoutSession(session.id),
       onSuccess: () => true,
     );
+  }
+
+  WorkoutSession? _sessionById(String sessionId) {
+    final normalizedId = sessionId.trim();
+    if (normalizedId.isEmpty) return null;
+
+    for (final session in sessions) {
+      if (session.id == normalizedId) return session;
+    }
+    return null;
   }
 
   Future<bool> _runSessionAction({
@@ -255,8 +304,15 @@ class MyWorkoutsController extends ChangeNotifier {
   }
 
   void _notify() {
-    if (!hasListeners) return;
+    if (_disposed || !hasListeners) return;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _generation++;
+    super.dispose();
   }
 
   List<AdvisedWorkoutItem> _toWorkoutItems(
@@ -394,7 +450,8 @@ class MyWorkoutsController extends ChangeNotifier {
       final completedAt = session.completedAt;
       if (completedAt == null) continue;
 
-      final key = (completedAt.year * 10000) +
+      final key =
+          (completedAt.year * 10000) +
           (completedAt.month * 100) +
           completedAt.day;
       uniqueDays.add(key);
@@ -411,7 +468,8 @@ class MyWorkoutsController extends ChangeNotifier {
       ..sort();
   }
 
-  static String _normalizedExerciseId(String rawId) => rawId.trim().toLowerCase();
+  static String _normalizedExerciseId(String rawId) =>
+      rawId.trim().toLowerCase();
 }
 
 extension _FirstOrNullWorkoutDayPlan<T> on Iterable<T> {

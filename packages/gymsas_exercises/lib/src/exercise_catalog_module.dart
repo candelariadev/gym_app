@@ -15,8 +15,9 @@ class ExerciseCatalogModule {
   factory ExerciseCatalogModule.production({
     required String graphQlEndpoint,
     required ExerciseAccessTokenProvider accessTokenProvider,
+    GraphQlClient? queryClient,
   }) {
-    final client = HttpGraphQlClient(endpoint: graphQlEndpoint);
+    final client = queryClient ?? HttpGraphQlClient(endpoint: graphQlEndpoint);
     final repository = ExerciseCatalogRepositoryImpl(
       dataSource: ExerciseGraphQlDataSource(client),
       accessTokenProvider: accessTokenProvider,

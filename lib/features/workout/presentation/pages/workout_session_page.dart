@@ -6,10 +6,19 @@ import '../../application/workout_session_store.dart';
 import '../../domain/workout_exercise_metadata.dart';
 import '../../domain/workout_session_data.dart';
 
+typedef WorkoutSessionAction = Future<bool> Function(String sessionId);
+
 class WorkoutSessionPage extends StatefulWidget {
-  const WorkoutSessionPage({super.key, required this.store});
+  const WorkoutSessionPage({
+    super.key,
+    required this.store,
+    required this.onPauseSession,
+    required this.onFinishSession,
+  });
 
   final WorkoutSessionStore store;
+  final WorkoutSessionAction onPauseSession;
+  final WorkoutSessionAction onFinishSession;
 
   static const routeName = '/workout-session';
 
@@ -19,6 +28,8 @@ class WorkoutSessionPage extends StatefulWidget {
 
 class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
   final Map<int, GlobalKey> _exerciseKeys = <int, GlobalKey>{};
+  bool _isSessionActionRunning = false;
+  bool _allowPop = false;
 
   String _formatTime(int totalSeconds) {
     final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
@@ -55,7 +66,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
                 Text(l10n.myAssignedRoutinesEmpty, textAlign: TextAlign.center),
                 const SizedBox(height: AppSpacing.medium),
                 Text(
-                  'Esta sesión no contiene ejercicios todavía.',
+                  l10n.workoutSessionEmpty,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -68,148 +79,214 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
         final colorScheme = theme.colorScheme;
         final completedExercises = store.completedExercisesCount;
 
-        return GymScrollablePage(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GymBrandedHeader(
-                title: l10n.appTitle,
-                onBack: () => Navigator.of(context).pop(),
+        return PopScope(
+          canPop: _allowPop,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _leaveSession();
+          },
+          child: AbsorbPointer(
+            absorbing: _isSessionActionRunning,
+            child: GymScrollablePage(
+              bottomNavigationBar: GymSessionActionBar(
+                statusText: store.saveFailed
+                    ? l10n.progressSaveError
+                    : store.isSaving
+                    ? l10n.progressSaving
+                    : store.areAllExercisesCompleted
+                    ? l10n.sessionActionsReady
+                    : l10n.sessionActionsIncomplete(
+                        completedExercises,
+                        session.totalExercises,
+                      ),
+                pauseLabel: l10n.pauseSessionAction,
+                finishLabel: l10n.finishWorkoutAction,
+                canPause:
+                    session.sessionId.isNotEmpty &&
+                    session.status == 'IN_PROGRESS',
+                canFinish:
+                    session.sessionId.isNotEmpty &&
+                    store.areAllExercisesCompleted,
+                isLoading: _isSessionActionRunning,
+                onPause: _pauseSession,
+                onFinish: _confirmAndFinishSession,
               ),
-              const SizedBox(height: AppSpacing.medium),
-              Center(
-                child: Text(
-                  session.routineName.isEmpty
-                      ? l10n.todayRoutineTitle
-                      : session.routineName,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.small),
-              Center(
-                child: _SessionElapsedTimer(
-                  label: l10n.sessionDurationLabel,
-                  formattedTime: _formatTime(
-                    store.elapsedSessionDuration.inSeconds,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: completedExercises / session.totalExercises,
-                        minHeight: 8,
-                        backgroundColor: const Color(0xFFE1E3EA),
-                        valueColor: AlwaysStoppedAnimation(colorScheme.primary),
+                  GymBrandedHeader(title: l10n.appTitle, onBack: _leaveSession),
+                  const SizedBox(height: AppSpacing.medium),
+                  Center(
+                    child: Text(
+                      session.routineName.isEmpty
+                          ? l10n.todayRoutineTitle
+                          : session.routineName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.small),
-                  Text(
-                    l10n.exerciseProgress(
-                      completedExercises,
-                      session.totalExercises,
-                    ),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF7E8397),
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: AppSpacing.small),
+                  Center(
+                    child: _SessionElapsedTimer(
+                      label: l10n.sessionDurationLabel,
+                      formattedTime: _formatTime(
+                        store.elapsedSessionDuration.inSeconds,
+                      ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.large),
-              Center(
-                child: Text(
-                  session.dayTitle ?? 'Día',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              ...List.generate(session.exercises.length, (exerciseIndex) {
-                final exercise = session.exercises[exerciseIndex];
-                final seriesCompleted = store.seriesFor(exerciseIndex);
-                final checkedSeries = seriesCompleted
-                    .where((isCompleted) => isCompleted)
-                    .length;
-                final canContinue =
-                    exercise.seriesCount > 0 &&
-                    checkedSeries == exercise.seriesCount;
-                final isCompleted = store.isExerciseCompleted(exerciseIndex);
-
-                return Container(
-                  key: _exerciseKeys.putIfAbsent(exerciseIndex, GlobalKey.new),
-                  padding: EdgeInsets.only(
-                    bottom: exerciseIndex == session.exercises.length - 1
-                        ? 0
-                        : AppSpacing.xLarge,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  const SizedBox(height: AppSpacing.medium),
+                  Row(
                     children: [
-                      _WorkoutVideoCard(
-                        primaryColor: colorScheme.primary,
-                        exerciseImageUrl: exercise.imageUrl,
-                      ),
-                      const SizedBox(height: AppSpacing.medium),
-                      _WorkoutExerciseCard(
-                        order: exercise.order,
-                        totalExercises: session.totalExercises,
-                        exercise: exercise,
-                        seriesCompleted: seriesCompleted,
-                        seriesWeights: store.weightsFor(exerciseIndex),
-                        seriesRepetitions: store.repetitionsFor(exerciseIndex),
-                        onSeriesTap: (seriesIndex) {
-                          store.toggleSeries(exerciseIndex, seriesIndex);
-                          if (store.seriesFor(exerciseIndex)[seriesIndex]) {
-                            store.startRestTimer();
-                          }
-                        },
-                        onWeightChanged: (seriesIndex, raw) => store
-                            .setSeriesWeight(exerciseIndex, seriesIndex, raw),
-                        onRepetitionsChanged: (seriesIndex, raw) =>
-                            store.setSeriesRepetitions(
-                              exerciseIndex,
-                              seriesIndex,
-                              raw,
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: completedExercises / session.totalExercises,
+                            minHeight: 8,
+                            backgroundColor: const Color(0xFFE1E3EA),
+                            valueColor: AlwaysStoppedAnimation(
+                              colorScheme.primary,
                             ),
-                        canContinue: canContinue,
-                        isCompleted: isCompleted,
-                        onComplete: () {
-                          store.completeExercise(exerciseIndex);
-                          _scrollToExercise(exerciseIndex + 1);
-                        },
-                      ),
-                      if (_hasAdditionalMetadata(exercise)) ...[
-                        const SizedBox(height: AppSpacing.medium),
-                        _WorkoutExerciseMetadataCard(
-                          metadata: exercise.metadata!,
-                        ),
-                      ],
-                      if (store.remainingRestSeconds > 0 &&
-                          store.activeExerciseIndex == exerciseIndex) ...[
-                        const SizedBox(height: AppSpacing.medium),
-                        _RestTimerCard(
-                          formattedTime: _formatTime(
-                            store.remainingRestSeconds,
                           ),
-                          onSkip: store.skipRest,
                         ),
-                      ],
+                      ),
+                      const SizedBox(width: AppSpacing.small),
+                      Text(
+                        l10n.exerciseProgress(
+                          completedExercises,
+                          session.totalExercises,
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF7E8397),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
-                );
-              }),
-            ],
+                  const SizedBox(height: AppSpacing.large),
+                  Center(
+                    child: Text(
+                      session.dayTitle ?? l10n.workoutDayFallback,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  ...List.generate(session.exercises.length, (exerciseIndex) {
+                    final exercise = session.exercises[exerciseIndex];
+                    final seriesCompleted = store.seriesFor(exerciseIndex);
+                    final checkedSeries = seriesCompleted
+                        .where((isCompleted) => isCompleted)
+                        .length;
+                    final canContinue =
+                        exercise.seriesCount > 0 &&
+                        checkedSeries == exercise.seriesCount;
+                    final isCompleted = store.isExerciseCompleted(
+                      exerciseIndex,
+                    );
+
+                    return Container(
+                      key: _exerciseKeys.putIfAbsent(
+                        exerciseIndex,
+                        GlobalKey.new,
+                      ),
+                      padding: EdgeInsets.only(
+                        bottom: exerciseIndex == session.exercises.length - 1
+                            ? 0
+                            : AppSpacing.xLarge,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _WorkoutVideoCard(
+                            primaryColor: colorScheme.primary,
+                            exerciseImageUrl: exercise.imageUrl,
+                          ),
+                          const SizedBox(height: AppSpacing.medium),
+                          _WorkoutExerciseCard(
+                            order: exercise.order,
+                            totalExercises: session.totalExercises,
+                            exercise: exercise,
+                            seriesCompleted: seriesCompleted,
+                            seriesWeights: store.weightsFor(exerciseIndex),
+                            seriesRepetitions: store.repetitionsFor(
+                              exerciseIndex,
+                            ),
+                            onSeriesTap: (seriesIndex) {
+                              final reps = store.repetitionsFor(
+                                exerciseIndex,
+                              )[seriesIndex];
+                              final weight = store.weightsFor(
+                                exerciseIndex,
+                              )[seriesIndex];
+                              if (!store.seriesFor(
+                                    exerciseIndex,
+                                  )[seriesIndex] &&
+                                  (reps == null ||
+                                      reps <= 0 ||
+                                      (weight != null &&
+                                          (!weight.isFinite || weight < 0)))) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.progressInvalidSet),
+                                  ),
+                                );
+                                return;
+                              }
+                              store.toggleSeries(exerciseIndex, seriesIndex);
+                              if (store.seriesFor(exerciseIndex)[seriesIndex]) {
+                                store.startRestTimer();
+                              }
+                            },
+                            onWeightChanged: (seriesIndex, raw) =>
+                                store.setSeriesWeight(
+                                  exerciseIndex,
+                                  seriesIndex,
+                                  raw,
+                                ),
+                            onRepetitionsChanged: (seriesIndex, raw) =>
+                                store.setSeriesRepetitions(
+                                  exerciseIndex,
+                                  seriesIndex,
+                                  raw,
+                                ),
+                            completionLabel: l10n.completeSetAction,
+                            completedLabel: l10n.setCompletedStatus,
+                            weightLabel: l10n.weightLabel,
+                            repetitionsLabel: l10n.repsLabel,
+                            canContinue: canContinue,
+                            isCompleted: isCompleted,
+                            onComplete: () {
+                              store.completeExercise(exerciseIndex);
+                              _scrollToExercise(exerciseIndex + 1);
+                            },
+                          ),
+                          if (_hasAdditionalMetadata(exercise)) ...[
+                            const SizedBox(height: AppSpacing.medium),
+                            _WorkoutExerciseMetadataCard(
+                              metadata: exercise.metadata!,
+                            ),
+                          ],
+                          if (store.remainingRestSeconds > 0 &&
+                              store.activeExerciseIndex == exerciseIndex) ...[
+                            const SizedBox(height: AppSpacing.medium),
+                            _RestTimerCard(
+                              formattedTime: _formatTime(
+                                store.remainingRestSeconds,
+                              ),
+                              onSkip: store.skipRest,
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -230,6 +307,84 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
         alignment: 0.08,
       );
     });
+  }
+
+  Future<void> _leaveSession() async {
+    if (_isSessionActionRunning) return;
+    setState(() => _isSessionActionRunning = true);
+    try {
+      await widget.store.flushPerformance();
+      if (!mounted) return;
+      setState(() {
+        _allowPop = true;
+        _isSessionActionRunning = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).maybePop();
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() => _isSessionActionRunning = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).progressSaveError)),
+      );
+    }
+  }
+
+  Future<void> _pauseSession() async {
+    await _runSessionAction(widget.onPauseSession);
+  }
+
+  Future<void> _confirmAndFinishSession() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.finishWorkoutConfirmationTitle),
+        content: Text(l10n.finishWorkoutConfirmationDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.finishWorkoutAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _runSessionAction(widget.onFinishSession);
+  }
+
+  Future<void> _runSessionAction(WorkoutSessionAction action) async {
+    if (_isSessionActionRunning) return;
+    final sessionId = widget.store.session.sessionId;
+    if (sessionId.isEmpty) return;
+
+    setState(() => _isSessionActionRunning = true);
+    final succeeded = await action(sessionId);
+    if (!mounted) return;
+    setState(() => _isSessionActionRunning = false);
+
+    if (succeeded) {
+      setState(() => _allowPop = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).maybePop();
+      });
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          widget.store.saveFailed
+              ? AppLocalizations.of(context).progressSaveError
+              : AppLocalizations.of(context).errorUnexpected,
+        ),
+      ),
+    );
   }
 
   bool _hasAdditionalMetadata(WorkoutExercise exercise) {
@@ -344,6 +499,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
     required this.onSeriesTap,
     required this.onWeightChanged,
     required this.onRepetitionsChanged,
+    required this.completionLabel,
+    required this.completedLabel,
+    required this.weightLabel,
+    required this.repetitionsLabel,
     required this.canContinue,
     required this.isCompleted,
     required this.onComplete,
@@ -358,6 +517,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
   final ValueChanged<int> onSeriesTap;
   final void Function(int seriesIndex, String value) onWeightChanged;
   final void Function(int seriesIndex, String value) onRepetitionsChanged;
+  final String completionLabel;
+  final String completedLabel;
+  final String weightLabel;
+  final String repetitionsLabel;
   final bool canContinue;
   final bool isCompleted;
   final VoidCallback onComplete;
@@ -434,6 +597,10 @@ class _WorkoutExerciseCard extends StatelessWidget {
                 onWeightChanged: (value) => onWeightChanged(index, value),
                 onRepetitionsChanged: (value) =>
                     onRepetitionsChanged(index, value),
+                completionLabel: completionLabel,
+                completedLabel: completedLabel,
+                weightLabel: weightLabel,
+                repetitionsLabel: repetitionsLabel,
               ),
             ),
           ),
@@ -469,19 +636,24 @@ class _WorkoutExerciseMetadataCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final tags = <String>[
-      if (metadata.force?.isNotEmpty == true) 'Tipo: ${metadata.force}',
-      if (metadata.level?.isNotEmpty == true) 'Nivel: ${metadata.level}',
+      if (metadata.force?.isNotEmpty == true)
+        l10n.exerciseForceMetadata(metadata.force!),
+      if (metadata.level?.isNotEmpty == true)
+        l10n.exerciseLevelMetadata(metadata.level!),
       if (metadata.mechanic?.isNotEmpty == true)
-        'Mecánica: ${metadata.mechanic}',
+        l10n.exerciseMechanicMetadata(metadata.mechanic!),
       if (metadata.equipment?.isNotEmpty == true)
-        'Equipo: ${metadata.equipment}',
+        l10n.exerciseEquipmentMetadata(metadata.equipment!),
       if (metadata.category?.isNotEmpty == true)
-        'Categoría: ${metadata.category}',
+        l10n.exerciseCategoryMetadata(metadata.category!),
       if (metadata.primaryMuscles.isNotEmpty)
-        'Músculos: ${metadata.primaryMuscles.join(', ')}',
+        l10n.exercisePrimaryMusclesMetadata(metadata.primaryMuscles.join(', ')),
       if (metadata.secondaryMuscles.isNotEmpty)
-        'Secundarios: ${metadata.secondaryMuscles.join(', ')}',
+        l10n.exerciseSecondaryMusclesMetadata(
+          metadata.secondaryMuscles.join(', '),
+        ),
     ];
 
     return GymSurface(
@@ -489,7 +661,7 @@ class _WorkoutExerciseMetadataCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Detalle del ejercicio',
+            l10n.exerciseDetailsTitle,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -525,7 +697,7 @@ class _WorkoutExerciseMetadataCard extends StatelessWidget {
           ],
           if (metadata.instructions.isNotEmpty) ...[
             Text(
-              'Instrucciones',
+              l10n.exerciseInstructionsTitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -655,6 +827,10 @@ class _SeriesTile extends StatefulWidget {
     required this.onTap,
     required this.onWeightChanged,
     required this.onRepetitionsChanged,
+    required this.completionLabel,
+    required this.completedLabel,
+    required this.weightLabel,
+    required this.repetitionsLabel,
   });
 
   final String label;
@@ -665,6 +841,10 @@ class _SeriesTile extends StatefulWidget {
   final VoidCallback onTap;
   final ValueChanged<String> onWeightChanged;
   final ValueChanged<String> onRepetitionsChanged;
+  final String completionLabel;
+  final String completedLabel;
+  final String weightLabel;
+  final String repetitionsLabel;
 
   @override
   State<_SeriesTile> createState() => _SeriesTileState();
@@ -695,14 +875,12 @@ class _SeriesTileState extends State<_SeriesTile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final statusColor = widget.isCompleted
-        ? const Color(0xFF49B55B)
-        : widget.isLocked
-        ? const Color(0xFFD0D3DE)
-        : const Color(0xFF9AA0B2);
+    final colorScheme = theme.colorScheme;
 
     return Material(
-      color: widget.isCompleted ? const Color(0xFFC3F0C5) : Colors.white,
+      color: widget.isCompleted
+          ? colorScheme.tertiary.withValues(alpha: 0.08)
+          : colorScheme.surface,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -710,59 +888,18 @@ class _SeriesTileState extends State<_SeriesTile> {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: widget.isCompleted
-                ? const Color(0xFF89D88B)
-                : const Color(0xFFE2E4EC),
+                ? colorScheme.tertiary
+                : colorScheme.outline,
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: widget.isLocked ? null : widget.onTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Text(
-                            widget.label,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            widget.isCompleted
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            color: statusColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  iconSize: 20,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                  tooltip: widget.isCompleted
-                      ? 'Serie completada'
-                      : 'Marcar serie',
-                  onPressed: widget.isLocked ? null : widget.onTap,
-                  icon: Icon(
-                    widget.isCompleted
-                        ? Icons.check_circle_rounded
-                        : Icons.circle_outlined,
-                    color: statusColor,
-                  ),
-                ),
-              ],
+            Text(
+              widget.label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
@@ -770,7 +907,7 @@ class _SeriesTileState extends State<_SeriesTile> {
                 Expanded(
                   child: _SeriesMetricField(
                     enabled: !widget.isLocked,
-                    label: 'Peso',
+                    label: widget.weightLabel,
                     hint: 'kg',
                     controller: _weightController,
                     keyboardType: const TextInputType.numberWithOptions(
@@ -783,7 +920,7 @@ class _SeriesTileState extends State<_SeriesTile> {
                 Expanded(
                   child: _SeriesMetricField(
                     enabled: !widget.isLocked,
-                    label: 'Reps',
+                    label: widget.repetitionsLabel,
                     hint: 'reps',
                     controller: _repetitionsController,
                     keyboardType: TextInputType.number,
@@ -791,6 +928,13 @@ class _SeriesTileState extends State<_SeriesTile> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            GymCompletionToggle(
+              isCompleted: widget.isCompleted,
+              label: widget.completionLabel,
+              completedLabel: widget.completedLabel,
+              onPressed: widget.isLocked ? null : widget.onTap,
             ),
           ],
         ),

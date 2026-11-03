@@ -53,7 +53,7 @@ class _CoachClientsPageState extends State<CoachClientsPage> {
 
   Widget _body(AppLocalizations l10n) {
     if (_controller.isLoading && _controller.clients.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: GymLoadingStatus(label: l10n.loadingData));
     }
     final error = _controller.errorCode;
     if (error != null && _controller.clients.isEmpty) {

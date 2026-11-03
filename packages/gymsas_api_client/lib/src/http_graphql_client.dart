@@ -63,7 +63,18 @@ class HttpGraphQlClient implements GraphQlClient {
           )
           .timeout(timeout);
 
-      final body = _decodeBody(response.body);
+      final Map<String, dynamic> body;
+      try {
+        body = _decodeBody(response.body);
+      } on FormatException {
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw ApiClientException(
+            ApiClientErrorCode.server,
+            statusCode: response.statusCode,
+          );
+        }
+        rethrow;
+      }
       final responseCorrelationId =
           response.headers['x-correlation-id'] ?? correlationId;
       final errors = body['errors'];

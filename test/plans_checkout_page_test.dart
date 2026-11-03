@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_app/features/payments/application/checkout_controller.dart';
 import 'package:gym_app/features/payments/presentation/pages/plans_checkout_page.dart';
+import 'package:gym_app/l10n/app_localizations.dart';
 import 'package:gymsas_payments/gymsas_payments.dart';
 
 void main() {
@@ -15,6 +16,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: PlansCheckoutPage(
           controller: CheckoutController(payments: payments),
         ),

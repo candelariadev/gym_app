@@ -1,4 +1,5 @@
 import 'package:gymsas_api_client/gymsas_api_client.dart';
+import '../../domain/entities/session_performance.dart';
 
 import '../../domain/entities/assign_workout_command.dart';
 import '../../domain/entities/start_workout_session_command.dart';
@@ -13,7 +14,8 @@ import '../../domain/workout_error.dart';
 import '../datasources/workout_graphql_data_source.dart';
 import '../mappers/workout_error_mapper.dart';
 
-class WorkoutRepositoryImpl implements WorkoutRepository {
+class WorkoutRepositoryImpl
+    implements WorkoutRepository, TimestampedWorkoutSessionPort {
   const WorkoutRepositoryImpl({
     required WorkoutGraphQlDataSource dataSource,
     required String? Function() accessTokenProvider,
@@ -77,9 +79,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
 
   @override
   Future<List<Workout>> getMyWorkouts({bool? activeOnly}) async {
-    _trace.record('workout_list_started', {
-      'active_only': activeOnly ?? true,
-    });
+    _trace.record('workout_list_started', {'active_only': activeOnly ?? true});
     try {
       final token = _accessTokenProvider();
       if (token == null || token.isEmpty) {
@@ -93,15 +93,11 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           .map(_readWorkout)
           .whereType<Workout>()
           .toList(growable: false);
-      _trace.record('workout_list_completed', {
-        'count': workouts.length,
-      });
+      _trace.record('workout_list_completed', {'count': workouts.length});
       return workouts;
     } on Object catch (error) {
       final mapped = _errorMapper.from(error);
-      _trace.record('workout_list_failed', {
-        'error_code': mapped.code.name,
-      });
+      _trace.record('workout_list_failed', {'error_code': mapped.code.name});
       throw mapped;
     }
   }
@@ -138,12 +134,16 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
-  Future<WorkoutSession> startWorkoutSession(StartWorkoutSessionCommand command) async {
+  Future<WorkoutSession> startWorkoutSession(
+    StartWorkoutSessionCommand command,
+  ) async {
     final scheduledDay = command.scheduledDay.trim().toUpperCase();
     final normalizedCommand = StartWorkoutSessionCommand(
       routineId: command.routineId.trim(),
       scheduledDay: scheduledDay,
       userId: command.userId?.trim(),
+      clientRequestId: command.clientRequestId,
+      startedAt: command.startedAt,
     );
     _trace.record('workout_session_start_requested', {
       'routine_id': normalizedCommand.routineId,
@@ -184,7 +184,9 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     if (normalizedId.isEmpty) {
       throw const WorkoutException(WorkoutErrorCode.invalidInput);
     }
-    _trace.record('workout_session_pause_requested', {'session_id': normalizedId});
+    _trace.record('workout_session_pause_requested', {
+      'session_id': normalizedId,
+    });
     try {
       final token = _accessTokenProvider();
       if (token == null || token.isEmpty) {
@@ -198,7 +200,9 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       if (session == null) {
         throw const WorkoutException(WorkoutErrorCode.invalidResponse);
       }
-      _trace.record('workout_session_pause_completed', {'session_id': normalizedId});
+      _trace.record('workout_session_pause_completed', {
+        'session_id': normalizedId,
+      });
       return session;
     } on Object catch (error) {
       final mapped = _errorMapper.from(error);
@@ -212,11 +216,26 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
 
   @override
   Future<WorkoutSession> finishWorkoutSession(String sessionId) async {
+    return _finishSession(sessionId, null);
+  }
+
+  @override
+  Future<WorkoutSession> finishWorkoutSessionAt(
+    String sessionId,
+    DateTime completedAt,
+  ) => _finishSession(sessionId, completedAt);
+
+  Future<WorkoutSession> _finishSession(
+    String sessionId,
+    DateTime? completedAt,
+  ) async {
     final normalizedId = sessionId.trim();
     if (normalizedId.isEmpty) {
       throw const WorkoutException(WorkoutErrorCode.invalidInput);
     }
-    _trace.record('workout_session_finish_requested', {'session_id': normalizedId});
+    _trace.record('workout_session_finish_requested', {
+      'session_id': normalizedId,
+    });
     try {
       final token = _accessTokenProvider();
       if (token == null || token.isEmpty) {
@@ -225,6 +244,7 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
       final raw = await _dataSource.finishSession(
         accessToken: token,
         sessionId: normalizedId,
+        completedAt: completedAt,
       );
       final session = _readWorkoutSession(raw);
       if (session == null) {
@@ -255,7 +275,9 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     final startDate = _toDate(raw['startDate']);
     final endDate = _toDate(raw['endDate']);
     final durationWeeks = _readInt(raw['durationWeeks']);
-    final notes = raw['notes'] is String ? (raw['notes'] as String).trim() : null;
+    final notes = raw['notes'] is String
+        ? (raw['notes'] as String).trim()
+        : null;
     final isCurrentMonthPlan = _readBool(raw['isCurrentMonthPlan']);
     final days = _readWorkoutDays(raw['days']);
     return Workout(
@@ -298,7 +320,8 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           if (sets == null || reps == null || restSeconds == null) {
             continue;
           }
-          final name = _readString(entry['name']) ??
+          final name =
+              _readString(entry['name']) ??
               _readString(entry['exerciseName']) ??
               exerciseId;
           exercises.add(
@@ -361,6 +384,19 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
           plannedSets: _readInt(rawExercise['plannedSets']),
           plannedReps: _readInt(rawExercise['plannedReps']),
           plannedRestSeconds: _readInt(rawExercise['plannedRestSeconds']),
+          sets: (rawExercise['sets'] as List? ?? const [])
+              .map((raw) {
+                final set = raw as Map<String, dynamic>;
+                return WorkoutSet(
+                  setNumber: _readInt(set['setNumber']) ?? 0,
+                  weightKg: (set['weightKg'] as num?)?.toDouble(),
+                  reps: _readInt(set['reps']),
+                  restSeconds: _readInt(set['restSeconds']),
+                  durationSeconds: _readInt(set['durationSeconds']),
+                  completed: set['completed'] == true,
+                );
+              })
+              .toList(growable: false),
         ),
       );
     }
@@ -388,8 +424,8 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
     return raw is int
         ? raw
         : raw is num
-              ? raw.toInt()
-              : int.tryParse(raw?.toString() ?? '');
+        ? raw.toInt()
+        : int.tryParse(raw?.toString() ?? '');
   }
 
   bool? _readBool(Object? raw) {
