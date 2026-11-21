@@ -19,14 +19,13 @@ class AuthGraphQlDataSource {
   final GraphQlClient _client;
 
   Future<TokenDto> login({
-    required String ownerId,
     required String user,
     required String password,
   }) async {
     final data = await _client.execute(
       document: _loginMutation,
       variables: {
-        'input': {'ownerId': ownerId, 'user': user, 'password': password},
+        'input': {'user': user, 'password': password},
       },
     );
     return TokenDto.fromJson(data['login'] as Map<String, dynamic>);

@@ -23,7 +23,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession> login(AuthCredentials credentials) async {
     try {
       final token = await _dataSource.login(
-        ownerId: credentials.ownerId,
         user: credentials.user,
         password: credentials.password,
       );

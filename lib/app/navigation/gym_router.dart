@@ -67,7 +67,6 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
     : _dependencies = dependencies,
       _loginController = LoginFormController(
         loginUseCase: dependencies.loginUseCase,
-        ownerId: dependencies.config.ownerId,
       ),
       _federatedController =
           dependencies.signInWithGoogleUseCase == null ||

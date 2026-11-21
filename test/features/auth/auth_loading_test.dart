@@ -205,7 +205,6 @@ class _Harness {
       authRepository: password,
       sessionRepository: sessions,
     ),
-    ownerId: 'tenant',
   );
   AuthSession? authenticated;
 
