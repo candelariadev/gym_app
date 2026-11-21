@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gym_app/features/advised/presentation/controllers/my_progress_controller.dart';
 import 'package:gym_app/features/advised/presentation/pages/my_progress_page.dart';
 import 'package:gym_app/features/workout/application/workout_session_store.dart';
 import 'package:gym_app/features/workout/domain/workout_session_data.dart';
@@ -134,6 +135,16 @@ void main() {
       expect(find.byType(GymProgressChart), findsNothing);
     },
   );
+
+  test('progress controller forwards the selected exercise', () async {
+    final port = _QueryPort();
+    final controller = MyProgressController(GetWorkoutProgress(port));
+    addTearDown(controller.dispose);
+    await controller.selectExercise('squat');
+    expect(port.lastRequest?.exerciseId, 'squat');
+    await controller.selectExercise('');
+    expect(port.lastRequest?.exerciseId, isNull);
+  });
 }
 
 class _PerformancePort implements SessionPerformanceCommandPort {

@@ -91,6 +91,8 @@
   "progressWeekly": "Semanal",
   "progressMonthly": "Mensual",
   "progressMetric": "Métrica",
+  "progressExercise": "Ejercicio",
+  "progressAllExercises": "Todos los ejercicios",
   "progressNoMeasurement": "Sin medición de carga",
   "progressHistoryDenied": "Tu suscripción no permite consultar este periodo.",
   "progressLoadError": "No pudimos cargar tu progreso. Intenta de nuevo.",

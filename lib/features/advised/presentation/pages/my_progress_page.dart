@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:gymsas_design_system/gymsas_design_system.dart';
 import 'package:gymsas_workouts/gymsas_workouts.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../workout/application/my_workouts_controller.dart';
 import '../controllers/my_progress_controller.dart';
 
 class MyProgressPage extends StatefulWidget {
-  const MyProgressPage({super.key, this.getProgress});
+  const MyProgressPage({super.key, this.getProgress, this.myWorkoutsController});
   static const routeName = '/advised/progress';
   final GetWorkoutProgress? getProgress;
+  final MyWorkoutsController? myWorkoutsController;
 
   @override
   State<MyProgressPage> createState() => _MyProgressPageState();
@@ -21,6 +25,10 @@ class _MyProgressPageState extends State<MyProgressPage> {
   void initState() {
     super.initState();
     controller = MyProgressController(widget.getProgress)..load();
+    final workouts = widget.myWorkoutsController;
+    if (workouts != null && workouts.workouts.isEmpty && !workouts.isLoading) {
+      unawaited(workouts.load());
+    }
   }
 
   @override
@@ -38,6 +46,36 @@ class _MyProgressPageState extends State<MyProgressPage> {
         ProgressMetric.sessions => l10n.progressSessions,
         ProgressMetric.trainingDays => l10n.progressTrainingDays,
       };
+
+  Map<String, String> _exerciseOptions() {
+    final workouts = widget.myWorkoutsController;
+    if (workouts == null) return const {};
+    final options = <String, String>{};
+    for (final item in workouts.workouts) {
+      for (final day in item.workout.days ?? const <WorkoutDayPlan>[]) {
+        for (final exercise in day.exercises) {
+          final id = exercise.exerciseId.trim();
+          if (id.isNotEmpty) options[id] = exercise.name.trim().isEmpty ? id : exercise.name;
+        }
+      }
+    }
+    for (final session in workouts.sessions) {
+      for (final exercise in session.exercises) {
+        final id = exercise.exerciseId.trim();
+        if (id.isNotEmpty) {
+          options.putIfAbsent(
+            id,
+            () => workouts.exerciseMetadata[id]?.displayName?.trim().isNotEmpty == true
+                ? workouts.exerciseMetadata[id]!.displayName!.trim()
+                : id,
+          );
+        }
+      }
+    }
+    return Map.fromEntries(
+      options.entries.toList()..sort((a, b) => a.value.compareTo(b.value)),
+    );
+  }
 
   Future<void> _selectRange() async {
     final now = DateTime.now();
@@ -78,11 +116,16 @@ class _MyProgressPageState extends State<MyProgressPage> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myProgressAction)),
       body: AnimatedBuilder(
-        animation: controller,
+        animation: Listenable.merge([
+          controller,
+          if (widget.myWorkoutsController != null)
+            widget.myWorkoutsController!,
+        ]),
         builder: (context, _) {
           final progress = controller.progress;
           final points = progress?.points ?? const <ProgressPoint>[];
           final title = _metric(controller.metric, l10n);
+          final exercises = _exerciseOptions();
           final chartPoints = points
               .map(
                 (p) => GymChartPoint(
@@ -137,6 +180,29 @@ class _MyProgressPageState extends State<MyProgressPage> {
                         },
                 ),
                 const SizedBox(height: AppSpacing.medium),
+                if (exercises.isNotEmpty) ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: controller.exerciseId ?? '',
+                    decoration: InputDecoration(
+                      labelText: l10n.progressExercise,
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: '',
+                        child: Text(l10n.progressAllExercises),
+                      ),
+                      for (final exercise in exercises.entries)
+                        DropdownMenuItem(
+                          value: exercise.key,
+                          child: Text(exercise.value),
+                        ),
+                    ],
+                    onChanged: controller.loading
+                        ? null
+                        : (value) => controller.selectExercise(value),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                ],
                 DropdownButtonFormField<ProgressMetric>(
                   initialValue: controller.metric,
                   decoration: InputDecoration(labelText: l10n.progressMetric),

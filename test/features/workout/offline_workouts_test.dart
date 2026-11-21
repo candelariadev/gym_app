@@ -214,6 +214,35 @@ void main() {
   );
 
   test(
+    'cerrar sesion durante un ACK conserva la operacion de la cuenta anterior',
+    () async {
+      final h = _Harness(_MemoryStorage());
+      addTearDown(h.repo.dispose);
+      await h.repo.synchronize();
+      h.remote.online = false;
+      await h.repo.startWorkoutSession(_start);
+      await h.repo.synchronize();
+      h.remote.online = true;
+      h.remote.startResponseGate = Completer<void>();
+      h.remote.startEntered = Completer<void>();
+      final syncing = h.repo.synchronize();
+      await h.remote.startEntered!.future;
+      h.identity = null;
+      h.repo.accountChanged();
+      h.remote.startResponseGate!.complete();
+      await syncing;
+      expect((await h.store.read(_identity.scope))['outbox'], hasLength(1));
+      expect(h.remote.sessions, hasLength(1));
+
+      h.identity = _identity;
+      h.repo.accountChanged();
+      await h.repo.synchronize();
+      expect(h.repo.state.pending, 0);
+      expect(h.remote.sessions, hasLength(1));
+    },
+  );
+
+  test(
     'rutinas y series sobreviven recrear el repositorio desde disco sin red',
     () async {
       final directory = await Directory.systemTemp.createTemp(
@@ -599,7 +628,12 @@ class _Remote
   bool online = true, loseStartResponse = false, rejectStart = false;
   int startCalls = 0;
   void Function()? onStartSaved;
-  Completer<void>? performanceGate, performanceEntered, workoutEntered;
+  Completer<void>?
+  performanceGate,
+      performanceEntered,
+      workoutEntered,
+      startResponseGate,
+      startEntered;
   final recordedWeights = <double?>[];
   Completer<List<Workout>>? workoutGate;
   final sessions = <String, WorkoutSession>{};
@@ -652,6 +686,10 @@ class _Remote
     sessions[value.id] = value;
     applied.add('start');
     onStartSaved?.call();
+    if (startEntered != null && !startEntered!.isCompleted) {
+      startEntered!.complete();
+    }
+    await startResponseGate?.future;
     if (loseStartResponse) {
       loseStartResponse = false;
       throw const WorkoutException(WorkoutErrorCode.timeout);

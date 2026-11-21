@@ -195,6 +195,7 @@ class OfflineWorkoutRepository
       throw const WorkoutException(WorkoutErrorCode.unauthorized);
     }
     final result = await _remote.assign(command);
+    _requireCurrent(scope);
     _kick();
     return result;
   }
@@ -505,6 +506,11 @@ class OfflineWorkoutRepository
           );
           return;
         }
+        // A logout/account switch may happen while the server mutation is in
+        // flight. Never acknowledge that operation against a stale scope: the
+        // old account must retain its outbox entry and replay it idempotently
+        // when that identity returns.
+        _requireCurrent(scope);
         await _persistDuringSync(scope, (latest) {
           if (started != null) {
             final map = Map<String, dynamic>.from(

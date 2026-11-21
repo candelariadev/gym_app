@@ -275,6 +275,7 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
       ),
       (UserRole.advised, MyProgressPage.routeName) => (_) => MyProgressPage(
         getProgress: _dependencies.getWorkoutProgress,
+        myWorkoutsController: _dependencies.myWorkoutsController,
       ),
       (UserRole.advised, WorkoutSessionPage.routeName) =>
         (_) => WorkoutSessionPage(

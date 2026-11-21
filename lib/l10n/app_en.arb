@@ -91,6 +91,8 @@
   "progressWeekly": "Weekly",
   "progressMonthly": "Monthly",
   "progressMetric": "Metric",
+  "progressExercise": "Exercise",
+  "progressAllExercises": "All exercises",
   "progressNoMeasurement": "No load measurement",
   "progressHistoryDenied": "Your subscription does not allow access to this period.",
   "progressLoadError": "We could not load your progress. Please try again.",

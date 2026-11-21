@@ -620,6 +620,18 @@ abstract class AppLocalizations {
   /// **'Métrica'**
   String get progressMetric;
 
+  /// No description provided for @progressExercise.
+  ///
+  /// In es, this message translates to:
+  /// **'Ejercicio'**
+  String get progressExercise;
+
+  /// No description provided for @progressAllExercises.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos los ejercicios'**
+  String get progressAllExercises;
+
   /// No description provided for @progressNoMeasurement.
   ///
   /// In es, this message translates to:

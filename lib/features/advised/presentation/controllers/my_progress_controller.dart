@@ -11,6 +11,7 @@ class MyProgressController extends ChangeNotifier {
   late DateTime from, to;
   ProgressGranularity granularity = ProgressGranularity.day;
   ProgressMetric metric = ProgressMetric.sets;
+  String? exerciseId;
   WorkoutProgress? progress;
   ProgressError? error;
   bool loading = false;
@@ -20,7 +21,7 @@ class MyProgressController extends ChangeNotifier {
 
   Future<void> load() async {
     final requestId = ++_requestId;
-    final requestKey = '$from:$to:${granularity.name}';
+    final requestKey = '$from:$to:${granularity.name}:${exerciseId ?? ''}';
     loading = true;
     error = null;
     notifyListeners();
@@ -38,6 +39,7 @@ class MyProgressController extends ChangeNotifier {
           to: to,
           granularity: granularity,
           timeZone: timeZone,
+          exerciseId: exerciseId,
         ),
       );
       if (_disposed || requestId != _requestId) return;
@@ -64,6 +66,12 @@ class MyProgressController extends ChangeNotifier {
   void selectMetric(ProgressMetric value) {
     metric = value;
     notifyListeners();
+  }
+
+  Future<void> selectExercise(String? value) {
+    final normalized = value?.trim();
+    exerciseId = normalized == null || normalized.isEmpty ? null : normalized;
+    return load();
   }
 
   @override

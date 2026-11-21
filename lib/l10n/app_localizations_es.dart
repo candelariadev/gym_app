@@ -329,6 +329,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get progressMetric => 'Métrica';
 
   @override
+  String get progressExercise => 'Ejercicio';
+
+  @override
+  String get progressAllExercises => 'Todos los ejercicios';
+
+  @override
   String get progressNoMeasurement => 'Sin medición de carga';
 
   @override
