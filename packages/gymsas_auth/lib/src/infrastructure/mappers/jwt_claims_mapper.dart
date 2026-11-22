@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import '../../domain/auth_error.dart';
 import '../../domain/user_role.dart';
+import '../../domain/user_source.dart';
 
 class AuthTokenClaims {
   const AuthTokenClaims({
     required this.ownerId,
     required this.user,
     required this.role,
+    required this.source,
     this.nickname,
     this.firebaseUid,
     this.plan,
@@ -16,6 +18,7 @@ class AuthTokenClaims {
   final String ownerId;
   final String user;
   final UserRole role;
+  final UserSource source;
   final String? nickname;
   final String? firebaseUid;
   final String? plan;
@@ -36,6 +39,7 @@ class JwtClaimsMapper {
         ownerId: json['sub'] as String,
         user: json['user'] as String,
         role: UserRole.fromBackend(json['role'] as String),
+        source: UserSource.fromBackend(json['source'] as String),
         nickname: json['nickname'] as String?,
         firebaseUid: json['firebaseUid'] as String?,
         plan: json['plan'] as String?,

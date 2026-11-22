@@ -12,6 +12,7 @@ void main() {
           'sub': 'tenant_1',
           'user': 'coach_demo',
           'role': 'TRAINER',
+          'source': 'MOBILE_APP',
         }),
       ),
     );
@@ -22,6 +23,7 @@ void main() {
     expect(claims.ownerId, 'tenant_1');
     expect(claims.user, 'coach_demo');
     expect(claims.role, UserRole.trainer);
+    expect(claims.source, UserSource.mobileApp);
   });
 
   test('identifica una sesión emitida por Firebase y su plan actual', () {
@@ -31,6 +33,7 @@ void main() {
           'sub': 'individual-account',
           'user': 'firebase-user',
           'role': 'ADVISED',
+          'source': 'MOBILE_APP',
           'firebaseUid': 'firebase-uid-1',
           'plan': 'INDIVIDUAL',
         }),
@@ -43,5 +46,23 @@ void main() {
 
     expect(claims.firebaseUid, 'firebase-uid-1');
     expect(claims.plan, 'INDIVIDUAL');
+  });
+
+  test('rechaza una sesión emitida para el panel web', () {
+    final payload = base64Url.encode(
+      utf8.encode(
+        jsonEncode({
+          'sub': 'tenant_1',
+          'user': 'admin',
+          'role': 'TRAINER',
+          'source': 'ADMIN_WEB',
+        }),
+      ),
+    );
+
+    expect(
+      () => const JwtClaimsMapper().fromToken('header.$payload.signature'),
+      throwsA(isA<AuthException>()),
+    );
   });
 }

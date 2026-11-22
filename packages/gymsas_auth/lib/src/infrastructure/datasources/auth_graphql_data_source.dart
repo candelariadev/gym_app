@@ -25,7 +25,7 @@ class AuthGraphQlDataSource {
     final data = await _client.execute(
       document: _loginMutation,
       variables: {
-        'input': {'user': user, 'password': password},
+        'input': {'user': user, 'password': password, 'source': 'MOBILE_APP'},
       },
     );
     return TokenDto.fromJson(data['login'] as Map<String, dynamic>);
