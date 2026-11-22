@@ -15,6 +15,8 @@ class RoleDashboardTemplate extends StatelessWidget {
     required this.content,
     required this.onLogout,
     this.onRefresh,
+    this.logoUrl,
+    this.dashboardHeroUrl,
   });
 
   final String appTitle;
@@ -27,6 +29,8 @@ class RoleDashboardTemplate extends StatelessWidget {
   final List<Widget> content;
   final VoidCallback onLogout;
   final Future<void> Function()? onRefresh;
+  final String? logoUrl;
+  final String? dashboardHeroUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,25 @@ class RoleDashboardTemplate extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text(appTitle),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (logoUrl != null && logoUrl!.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(7),
+                child: Image.network(
+                  logoUrl!,
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+            ],
+            Flexible(child: Text(appTitle, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: logoutTooltip,
@@ -65,6 +87,18 @@ class RoleDashboardTemplate extends StatelessWidget {
                           colors: [colorScheme.primary, colorScheme.secondary],
                         ),
                         borderRadius: BorderRadius.circular(24),
+                        image:
+                            dashboardHeroUrl == null ||
+                                dashboardHeroUrl!.isEmpty
+                            ? null
+                            : DecorationImage(
+                                image: NetworkImage(dashboardHeroUrl!),
+                                fit: BoxFit.cover,
+                                colorFilter: ColorFilter.mode(
+                                  colorScheme.primary.withValues(alpha: 0.58),
+                                  BlendMode.srcOver,
+                                ),
+                              ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
