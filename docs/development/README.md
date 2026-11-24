@@ -42,9 +42,6 @@ Crea `lib/.env`. El archivo está ignorado por Git y se compila mediante
 # Android Emulator
 BFF_GRAPHQL_URL=http://10.0.2.2:8090/graphql
 
-# Sólo para el login tradicional multi-tenant
-GYM_OWNER_ID=tenant_1
-
 # Clave pública, nunca el Access Token
 MERCADO_PAGO_PUBLIC_KEY=TEST-tu-public-key
 ```

@@ -6,11 +6,13 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/localization/auth_localizations.dart';
 import '../../../workout/application/my_workouts_controller.dart';
 import '../../../workout/presentation/pages/workout_calendar_view.dart';
+import '../../../../core/branding/tenant_branding_controller.dart';
 
 class AdvisedDashboardPage extends StatefulWidget {
   const AdvisedDashboardPage({
     super.key,
     required this.session,
+    required this.branding,
     required this.onLogout,
     required this.onOpenTodayWorkout,
     required this.onOpenMyProgress,
@@ -21,6 +23,7 @@ class AdvisedDashboardPage extends StatefulWidget {
   });
 
   final AuthSession session;
+  final TenantBranding branding;
   final VoidCallback onLogout;
   final VoidCallback onOpenTodayWorkout;
   final VoidCallback onOpenMyProgress;
@@ -69,7 +72,9 @@ class _AdvisedDashboardPageState extends State<AdvisedDashboardPage> {
     final l10n = AppLocalizations.of(context);
     final pages = [
       RoleDashboardTemplate(
-        appTitle: l10n.appTitle,
+        appTitle: widget.branding.brandName,
+        logoUrl: widget.branding.assets.logoUrl,
+        dashboardHeroUrl: widget.branding.assets.dashboardHeroUrl,
         logoutTooltip: l10n.logoutTooltip,
         greeting: l10n.greeting(widget.session.displayName),
         roleLabel: l10n.roleLabel(widget.session.role),

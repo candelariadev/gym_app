@@ -207,10 +207,7 @@ AppDependencies _dependencies(
       ? null
       : _FakeFederatedAuthRepository(federatedRole);
   return AppDependencies(
-    config: const AppConfig(
-      graphQlUrl: 'http://localhost/graphql',
-      ownerId: 'tenant_1',
-    ),
+    config: const AppConfig(graphQlUrl: 'http://localhost/graphql'),
     loginUseCase: LoginUseCase(
       authRepository: _FakeAuthRepository(role),
       sessionRepository: sessions,
@@ -401,7 +398,7 @@ class _FakeAuthRepository implements AuthRepository {
       accessTokenExpiresAt: DateTime.now().add(const Duration(hours: 1)),
       refreshToken: 'refresh',
       refreshTokenExpiresAt: DateTime.now().add(const Duration(days: 1)),
-      ownerId: credentials.ownerId,
+      ownerId: 'tenant_1',
       user: credentials.user,
       role: role,
     );

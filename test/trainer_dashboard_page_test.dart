@@ -4,6 +4,7 @@ import 'package:gym_app/features/dashboard/presentation/pages/trainer_dashboard_
 import 'package:gym_app/l10n/app_localizations.dart';
 import 'package:gymsas_auth/gymsas_auth.dart';
 import 'package:gymsas_dashboard/gymsas_dashboard.dart';
+import 'package:gym_app/core/branding/tenant_branding_controller.dart';
 
 void main() {
   testWidgets('pull to refresh solicita nuevamente las métricas', (
@@ -18,6 +19,7 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: TrainerDashboardPage(
+          branding: TenantBranding.defaults,
           session: AuthSession(
             accessToken: 'token',
             accessTokenExpiresAt: DateTime(2026, 8, 12, 20),

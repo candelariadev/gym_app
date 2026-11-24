@@ -81,6 +81,7 @@ class FederatedAuthRepositoryImpl implements FederatedAuthRepository {
         ownerId: claims.ownerId,
         user: claims.user,
         role: claims.role,
+        source: claims.source,
         nickname: claims.nickname,
         firebaseUid: claims.firebaseUid,
         plan: claims.plan,

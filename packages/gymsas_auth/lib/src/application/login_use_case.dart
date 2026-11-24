@@ -1,4 +1,3 @@
-import '../domain/auth_error.dart';
 import '../domain/entities/auth_credentials.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/ports/auth_repository.dart';
@@ -15,9 +14,6 @@ class LoginUseCase {
   final SessionRepository _sessionRepository;
 
   Future<AuthSession> call(AuthCredentials credentials) async {
-    if (credentials.ownerId.trim().isEmpty) {
-      throw const AuthException(AuthErrorCode.configurationMissing);
-    }
     final session = await _authRepository.login(credentials);
     await _sessionRepository.save(session);
     return session;

@@ -15,4 +15,5 @@ export 'src/domain/ports/session_repository.dart';
 export 'src/domain/ports/external_identity_provider.dart';
 export 'src/domain/ports/federated_auth_repository.dart';
 export 'src/domain/user_role.dart';
+export 'src/domain/user_source.dart';
 export 'src/domain/user_gender.dart';

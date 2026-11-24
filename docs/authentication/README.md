@@ -1,8 +1,10 @@
 # Autenticación y onboarding
 
 GymSAS admite dos entradas: login tradicional para cuentas multi-tenant y
-Google Sign-In para cuentas individuales. Firebase demuestra la identidad; el
-BFF y los servicios internos resuelven autorización y sesión.
+Google Sign-In para cuentas individuales. El login tradicional solicita solo
+usuario y contraseña; el backend resuelve el tenant desde la cuenta global y lo
+incluye en el claim `sub` del JWT. Firebase demuestra la identidad en el flujo
+federado; el BFF y los servicios internos resuelven autorización y sesión.
 
 ## Flujo con Google
 
@@ -53,5 +55,6 @@ en texto plano.
 5. Cierra sesión y comprueba que se cierran la sesión GymSAS y Firebase.
 6. Vuelve a iniciar sesión y verifica que ya no se solicita onboarding.
 
-El login tradicional conserva `GYM_OWNER_ID` sólo para su flujo multi-tenant.
+El login tradicional no requiere configuración de tenant: el backend lo obtiene
+de la cuenta autenticada y la app lo recupera desde el JWT.
 

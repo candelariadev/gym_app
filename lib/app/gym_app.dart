@@ -38,13 +38,27 @@ class _GymAppState extends State<GymApp> {
 
   @override
   Widget build(BuildContext context) {
+    final branding = widget.dependencies.brandingController;
+    if (branding != null) {
+      return AnimatedBuilder(
+        animation: branding,
+        builder: (context, _) => _buildApp(),
+      );
+    }
+    return _buildApp();
+  }
+
+  Widget _buildApp() {
+    final tenantBranding = widget.dependencies.brandingController?.branding;
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       locale: widget.locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.light(
+        palette: tenantBranding?.toAppColors() ?? AppColors.defaultPalette,
+      ),
       builder: (context, child) {
         final notifications = widget.dependencies.notificationsController;
         if (notifications != null) {

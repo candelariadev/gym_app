@@ -204,9 +204,6 @@ Crea `lib/.env`:
 # Android Emulator
 BFF_GRAPHQL_URL=http://10.0.2.2:8090/graphql
 
-# Sólo para login tradicional multi-tenant
-GYM_OWNER_ID=tenant_1
-
 # Sólo si validarás checkout
 MERCADO_PAGO_PUBLIC_KEY=TEST-tu-public-key
 ```

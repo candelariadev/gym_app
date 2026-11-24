@@ -12,6 +12,7 @@ import 'package:gymsas_firebase_messaging/gymsas_firebase_messaging.dart';
 import '../features/notifications/application/notifications_controller.dart';
 import 'dart:convert';
 import '../core/offline/offline_sync_controller.dart';
+import '../core/branding/tenant_branding_controller.dart';
 
 import '../core/config/app_config.dart';
 import '../features/workout/application/my_workouts_controller.dart';
@@ -36,6 +37,7 @@ class AppDependencies {
     this.getWorkoutProgress,
     this.offlineSyncController,
     this.notificationsController,
+    this.brandingController,
     this.getConfirmedWorkout,
     this.signInWithGoogleUseCase,
     this.completeIndividualOnboardingUseCase,
@@ -69,6 +71,15 @@ class AppDependencies {
       trace: trace,
       beforeLogout: () async {
         await notificationsController?.beforeLogout();
+      },
+    );
+    final brandingController = TenantBrandingController(
+      client: HttpGraphQlClient(endpoint: config.graphQlUrl, trace: trace),
+      session: () {
+        final value = sessionController.session;
+        return value == null
+            ? null
+            : (ownerId: value.ownerId, accessToken: value.accessToken);
       },
     );
     final localStore = SerializedOfflineDocumentStore(
@@ -163,6 +174,7 @@ class AppDependencies {
       workoutsModule.offlineRepository!.accountChanged();
       notificationsModule.accountChanged();
       notificationsController!.accountChanged();
+      brandingController.accountChanged();
     }
 
     sessionController.addListener(onAccountChanged);
@@ -173,6 +185,7 @@ class AppDependencies {
       workoutSessionStore: workoutStore,
       offlineSyncController: sync,
       notificationsController: notificationsController,
+      brandingController: brandingController,
       getConfirmedWorkout: workoutsModule.getConfirmedWorkout,
       getWorkoutProgress: workoutsModule.getWorkoutProgress,
       getTrainerClientsUseCase: clientsModule.getTrainerClientsUseCase,
@@ -193,6 +206,7 @@ class AppDependencies {
         workoutsModule.dispose();
         notificationsModule.dispose();
         authModule.dispose();
+        brandingController.dispose();
       },
     );
   }
@@ -210,6 +224,7 @@ class AppDependencies {
   final GetWorkoutProgress? getWorkoutProgress;
   final OfflineSyncController? offlineSyncController;
   final NotificationsController? notificationsController;
+  final TenantBrandingController? brandingController;
   final GetConfirmedWorkoutUseCase? getConfirmedWorkout;
   final SignInWithGoogleUseCase? signInWithGoogleUseCase;
   final CompleteIndividualOnboardingUseCase?

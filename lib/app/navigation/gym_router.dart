@@ -24,6 +24,7 @@ import '../../features/workout/presentation/pages/workout_session_page.dart';
 import '../../features/workout/presentation/pages/workout_today_page.dart';
 import '../../features/payments/presentation/pages/plans_checkout_page.dart';
 import '../app_dependencies.dart';
+import '../../core/branding/tenant_branding_controller.dart';
 import '../../features/notifications/presentation/notifications_page.dart';
 import '../../features/notifications/presentation/notification_routine_page.dart';
 import 'package:gymsas_notifications/gymsas_notifications.dart';
@@ -67,7 +68,6 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
     : _dependencies = dependencies,
       _loginController = LoginFormController(
         loginUseCase: dependencies.loginUseCase,
-        ownerId: dependencies.config.ownerId,
       ),
       _federatedController =
           dependencies.signInWithGoogleUseCase == null ||
@@ -154,6 +154,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         name: '/trainer',
         child: TrainerDashboardPage(
           session: session!,
+          branding:
+              _dependencies.brandingController?.branding ??
+              TenantBranding.defaults,
           getTrainerDashboard: _dependencies.getTrainerDashboardUseCase,
           onLogout: controller.logout,
           onOpenClients: () => _pushNamed(CoachClientsPage.routeName),
@@ -173,6 +176,9 @@ class GymRouterDelegate extends RouterDelegate<GymRoutePath>
         name: '/advised',
         child: AdvisedDashboardPage(
           session: session!,
+          branding:
+              _dependencies.brandingController?.branding ??
+              TenantBranding.defaults,
           onLogout: controller.logout,
           onOpenTodayWorkout: () => _pushNamed(WorkoutTodayPage.routeName),
           onOpenMyProgress: () => _pushNamed(MyProgressPage.routeName),

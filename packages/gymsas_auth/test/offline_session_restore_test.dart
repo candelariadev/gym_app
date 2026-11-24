@@ -14,7 +14,12 @@ void main() {
       const repository = SecureSessionRepository(storage);
       final payload = base64Url.encode(
         utf8.encode(
-          jsonEncode({'sub': 'tenant', 'user': 'user', 'role': 'ADVISED'}),
+          jsonEncode({
+            'sub': 'tenant',
+            'user': 'user',
+            'role': 'ADVISED',
+            'source': 'MOBILE_APP',
+          }),
         ),
       );
       await repository.save(

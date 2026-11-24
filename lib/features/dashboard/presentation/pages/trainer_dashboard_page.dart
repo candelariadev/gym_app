@@ -5,11 +5,13 @@ import 'package:gymsas_dashboard/gymsas_dashboard.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/localization/auth_localizations.dart';
+import '../../../../core/branding/tenant_branding_controller.dart';
 
 class TrainerDashboardPage extends StatefulWidget {
   const TrainerDashboardPage({
     super.key,
     required this.session,
+    required this.branding,
     required this.getTrainerDashboard,
     required this.onLogout,
     required this.onOpenClients,
@@ -20,6 +22,7 @@ class TrainerDashboardPage extends StatefulWidget {
   });
 
   final AuthSession session;
+  final TenantBranding branding;
   final GetTrainerDashboardUseCase getTrainerDashboard;
   final VoidCallback onLogout;
   final VoidCallback onOpenClients;
@@ -58,7 +61,9 @@ class _TrainerDashboardPageState extends State<TrainerDashboardPage> {
         builder: (context, snapshot) {
           final dashboard = snapshot.data;
           return RoleDashboardTemplate(
-            appTitle: l10n.appTitle,
+            appTitle: widget.branding.brandName,
+            logoUrl: widget.branding.assets.logoUrl,
+            dashboardHeroUrl: widget.branding.assets.dashboardHeroUrl,
             logoutTooltip: l10n.logoutTooltip,
             greeting: l10n.greeting(widget.session.displayName),
             roleLabel: l10n.roleLabel(widget.session.role),

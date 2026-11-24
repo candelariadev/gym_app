@@ -1,4 +1,5 @@
 import '../user_role.dart';
+import '../user_source.dart';
 
 class AuthSession {
   const AuthSession({
@@ -9,6 +10,7 @@ class AuthSession {
     required this.ownerId,
     required this.user,
     required this.role,
+    this.source = UserSource.mobileApp,
     this.nickname,
     this.firebaseUid,
     this.plan,
@@ -21,6 +23,7 @@ class AuthSession {
   final String ownerId;
   final String user;
   final UserRole role;
+  final UserSource source;
   final String? nickname;
   final String? firebaseUid;
   final String? plan;

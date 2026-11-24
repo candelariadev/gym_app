@@ -2,14 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:gymsas_auth/gymsas_auth.dart';
 
 class LoginFormController extends ChangeNotifier {
-  LoginFormController({
-    required LoginUseCase loginUseCase,
-    required String ownerId,
-  }) : _loginUseCase = loginUseCase,
-       _ownerId = ownerId;
+  LoginFormController({required LoginUseCase loginUseCase})
+    : _loginUseCase = loginUseCase;
 
   final LoginUseCase _loginUseCase;
-  final String _ownerId;
 
   bool _isLoading = false;
   AuthErrorCode? _errorCode;
@@ -28,11 +24,7 @@ class LoginFormController extends ChangeNotifier {
     _notifyListeners();
     try {
       return await _loginUseCase(
-        AuthCredentials(
-          ownerId: _ownerId,
-          user: user.trim(),
-          password: password,
-        ),
+        AuthCredentials(user: user.trim(), password: password),
       );
     } on AuthException catch (error) {
       _errorCode = error.code;
